@@ -9,6 +9,7 @@ class LogReader(object):
 		self.num_pvs = len(pvs)
 		self.first_time = True
 		self.tail_process = sh.tail(["-f","-n0"], self.filename, _out=self.process_line, _bg=True)
+		# TODO: bug: this process does not die when python exits.
 
 	def start_pv_broadcast(self, value_strings):
 		for pv in self.pvs:
