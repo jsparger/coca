@@ -4,6 +4,7 @@ from pcaspy import cas
 import threading
 import time
 import sys
+import multiprocessing
 
 # A companion to the pcaspy manager
 class CocaManager(pcaspy.driver.Manager):
@@ -126,6 +127,11 @@ def process_events():
 t = threading.Thread(target=process_events)
 t.daemon = True
 t.start()
+
+def print_pv(pv):
+	print pv
+	print pv.name
+	print pv.value
 
 def broadcast_pv(pv):
 	if any(s in str(type(pv)) for s in ["coca::PV", "coca::iPV"]):
