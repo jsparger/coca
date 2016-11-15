@@ -121,6 +121,7 @@ driver = ProxyDriver()
 # A thread to run the server
 update_period_seconds = 0.1
 def process_events():
+	"starting server"
 	while True:
 		server.process(update_period_seconds)
 
