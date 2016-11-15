@@ -8,10 +8,12 @@
 #pragma link C++ nestedclass;
 #pragma link C++ nestedtypedef;
 #pragma link C++ namespace coca;
+#pragma link C++ class coca::Demangler+;
+#pragma link C++ function coca::get_python_proxy;
+#pragma link C++ class coca::PythonUtility+;
 #pragma link C++ class coca::iPV+;
 #pragma link C++ class coca::PV+;
 #pragma link C++ function coca::create_pv;
-#pragma link C++ class coca::Demangler+;
 #pragma link C++ function coca::broadcast_pv;
 #pragma link C++ class coca::dummy+;
 #endif

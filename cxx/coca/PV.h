@@ -10,11 +10,54 @@
 #include "TClass.h"
 #include <typeinfo>
 #include <cxxabi.h>
+#include <iostream>
 
 #define FMT_HEADER_ONLY
 #include "fmt/format.h"
 
 namespace coca {
+
+struct Demangler
+{
+	static std::string demangle(const char* name)
+	{
+	    int status = -4; // some arbitrary value to eliminate the compiler warning
+
+	    // enable c++11 by passing the flag -std=c++11 to g++
+	    std::unique_ptr<char, void(*)(void*)> res {
+	        abi::__cxa_demangle(name, NULL, NULL, &status),
+	        std::free
+	    };
+
+	    return (status==0) ? res.get() : name ;
+	}
+};
+
+template <typename T>
+PyObject* get_python_proxy(T& pv)
+{
+	std::string klassName = Demangler::demangle(typeid(pv).name());
+	return TPython::ObjectProxy_FromVoidPtr((void*)&pv, klassName.c_str());
+}
+
+struct PythonUtility
+{
+	static void broadcast_pv(PyObject* proxy)
+	{
+		PyObject* coca = PyImport_Import(PyString_FromString((char*)"coca"));
+		PyObject* broadcast_pv = PyObject_GetAttrString(coca,(char*)"broadcast_cxx_pv");
+		PyObject* args = PyTuple_Pack(1,proxy);
+		PyObject* result = PyObject_CallObject(broadcast_pv, args);
+	}
+
+	static void update_pv(PyObject* proxy)
+	{
+		PyObject* coca = PyImport_Import(PyString_FromString((char*)"coca"));
+		PyObject* update_pv = PyObject_GetAttrString(coca,(char*)"update_cxx_pv");
+		PyObject* args = PyTuple_Pack(1,proxy);
+		PyObject* result = PyObject_CallObject(update_pv, args);
+	}
+};
 
 struct iPV
 {
@@ -22,6 +65,7 @@ struct iPV
 		: name(name) {;}
 	virtual ~iPV() {;}
 	virtual bool isUpdated() = 0;
+	virtual void fill() = 0;
 	std::string name;
 };
 
@@ -29,7 +73,10 @@ template <typename T>
 struct PV : public iPV
 {
 	PV(std::string name, T* value)
-		: iPV(name), value(value), previous(*value) {;}
+		: iPV(name), value(value), previous(*value) 
+		{
+			this->proxy = get_python_proxy(*this);
+		}
 	virtual ~PV() {;}
 
 	virtual bool isUpdated() override
@@ -37,6 +84,11 @@ struct PV : public iPV
 		bool updated = (*value != previous);
 		if (updated) { previous = *value; }
 		return updated;
+	}
+
+	virtual void fill() override
+	{
+		PythonUtility::update_pv(this->proxy);
 	}
 
 	virtual const T& getValue()
@@ -80,6 +132,8 @@ struct PV : public iPV
 	bool bUnits = false;
 	bool bPrecision = false;
 	bool bScan = true;
+
+	PyObject* proxy = nullptr;
 };
 
 template <typename T>
@@ -87,22 +141,6 @@ PV<T> create_pv(std::string name, T* value)
 {
 	return PV<T>(name,value);
 }
-
-struct Demangler
-{
-	static std::string demangle(const char* name)
-	{
-	    int status = -4; // some arbitrary value to eliminate the compiler warning
-
-	    // enable c++11 by passing the flag -std=c++11 to g++
-	    std::unique_ptr<char, void(*)(void*)> res {
-	        abi::__cxa_demangle(name, NULL, NULL, &status),
-	        std::free
-	    };
-
-	    return (status==0) ? res.get() : name ;
-	}
-};
 
 // template <typename T>
 // void broadcast_pv_safe(T& pv)
@@ -127,13 +165,9 @@ struct Demangler
 template <typename T>
 void broadcast_pv(T& pv)
 {
-	std::string klassName = Demangler::demangle(typeid(pv).name());
-	auto proxy = TPython::ObjectProxy_FromVoidPtr((void*)&pv, klassName.c_str());
-	PyObject* coca = PyImport_Import(PyString_FromString((char*)"coca"));
-	PyObject* broadcast_pv = PyObject_GetAttrString(coca,(char*)"broadcast_pv");
-	PyObject* args = PyTuple_Pack(1,proxy);
-	PyObject* result = PyObject_CallObject(broadcast_pv, args);
+	PythonUtility::broadcast_pv(pv.proxy);
 }
+
 
 struct dummy
 {
@@ -146,6 +180,11 @@ struct dummy
 		pv.setLimits({-8,-5,5,8});
 		pv.setUnits("kProof");
 		return pv;
+	}
+
+	void bcast(PV<double>& pv)
+	{
+		broadcast_pv(pv);
 	}
 };
 
