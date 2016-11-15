@@ -153,8 +153,4 @@ struct dummy
 
 }
 
-// ClassImp(coca::PV<double>);
-// templateClassImp(coca::PV); // TODO: is this necessary?
-
-
 #endif
