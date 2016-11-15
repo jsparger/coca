@@ -9,7 +9,6 @@
 
 void basic()
 {
-	coca::dummy(); 
 	double x = 10.0; 
 	auto dog = coca::create_pv("dog",&x); 
 	coca::broadcast_pv(dog);
