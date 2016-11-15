@@ -9,8 +9,8 @@ with open(file,'w') as logfile:
 
 # describe the log file. each entry in pvs describes a column.
 meta = {'lolim': -10, 'scan': 0.1, 'lolo': -8, 'prec': 3, 'high': 5, 'hilim': 10, 'low': -5, 'hihi': 8, 'unit': 'tst'}
-pvs = [ coca.Data("LogReader:test",  value=float(), meta=meta),
-        coca.Data("LogReader:test2", value=float(), meta=meta) ]
+pvs = [ coca.PV("LogReader:test",  value=float(), meta=meta),
+        coca.PV("LogReader:test2", value=float(), meta=meta) ]
 
 # create the reader.
 reader = coca.LogReader(pvs,file=file)

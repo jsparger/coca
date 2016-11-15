@@ -85,6 +85,7 @@ class Data(BaseData):
 
 	@property
 	def value(self):
+		self._value = interface.get_pv(self.name).value
 		self.update_status(self._value)
 		return self._value
 
@@ -111,6 +112,9 @@ class ProxyDriver(pcaspy.Driver):
 				data.value = old_driver.pvDB[reason].value if check else pv.info.value 
 			self.pvDB[reason] = data
 
+# A global interface
+interface = None
+
 # A global instance of the server
 server = pcaspy.SimpleServer()
 
@@ -128,26 +132,22 @@ t = threading.Thread(target=process_events)
 t.daemon = True
 t.start()
 
-def print_pv(pv):
-	print pv
-	print pv.name
-	print pv.value
 
-def broadcast_pv(pv):
-	if any(s in str(type(pv)) for s in ["coca::PV", "coca::iPV"]):
-		broadcast_proxy_pv(pv)
-	elif isinstance(pv, Data):
-		broadcast_python_pv(pv)
-	else:
-		raise TypeError("The type {} is not supported".format(type(pv)))
+def check_for_new_pvs():
+	while not interface:
+		time.sleep(0.1)
+	while True:
+		pvs = interface.get_pv_dict()
+		for name in interface.get_new():
+			x = pvs[name]
+			pv = Data(name=x.name,meta=x.meta,value=x._value)
+			broadcast_python_pv(pv)
+		interface.clear_new()
+		time.sleep(1)
 
-def create_pv(prefix,pvdb):
-	with cocamanager.mutex:
-		global driver
-		del cocamanager._driver[driver.port]
-		server.createPV(prefix="",pvdb=pvdb)
-		# refresh the driver
-		driver = ProxyDriver(old_driver=driver)
+tnpv = threading.Thread(target=check_for_new_pvs)
+tnpv.daemon = True
+tnpv.start()
 
 def broadcast_python_pv(pv):
 	with cocamanager.mutex:
@@ -155,24 +155,5 @@ def broadcast_python_pv(pv):
 		del cocamanager._driver[driver.port]
 		cocamanager.proxies[pv.name] = pv
 		server.createPV(prefix="",pvdb=pv.pvdb)
-		# refresh the driver
-		driver = ProxyDriver(old_driver=driver)
-
-# A function to create a pv
-def broadcast_proxy_pv(pv):
-	# delete the existing driver from the manager to prevent
-	# scan threads from accessing driver while we update
-	# TODO: this is still a race condition unless we protect with a mutex.
-	
-	with cocamanager.mutex:
-		global driver
-		del cocamanager._driver[driver.port]
-		# add pv to cocamanager
-		cocamanager.proxies[pv.name] = pv
-		# create the pv using the server
-		dict_string = pv.asDict();
-		pvdb = ast.literal_eval(dict_string)
-		print pvdb
-		server.createPV(prefix="",pvdb=pvdb)
 		# refresh the driver
 		driver = ProxyDriver(old_driver=driver)

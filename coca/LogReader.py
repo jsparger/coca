@@ -1,4 +1,4 @@
-import driver
+import interface
 import sh
 import csv
 
@@ -13,7 +13,7 @@ class LogReader(object):
 
 	def start_pv_broadcast(self, value_strings):
 		for pv in self.pvs:
-			driver.broadcast_pv(pv)
+			interface.broadcast_pv(pv)
 
 	def process_line(self,line):
 		value_strings = list(csv.reader([line]))[0]

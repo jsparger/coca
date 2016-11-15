@@ -1,8 +1,7 @@
 import coca
 import random
-import sys
 import time
-import threading
+
 
 # A function to perform random walk betweein -10 and 10.
 def walk(val):
@@ -10,8 +9,8 @@ def walk(val):
 	return newval if abs(newval) < 10 else val
 
 # create some PVs
-pvA = coca.Data("test2:A", value = 7.0, meta={'lolim': -10, 'scan': 0.1, 'lolo': -8, 'prec': 3, 'high': 5, 'hilim': 10, 'low': -5, 'hihi': 8, 'unit': 'tst'})
-pvB = coca.Data("test2:B", value = 7.0, meta={'lolim': -10, 'scan': 0.1, 'lolo': -8, 'prec': 3, 'high': 5, 'hilim': 10, 'low': -5, 'hihi': 8, 'unit': 'cats'})
+pvA = coca.PV("test2:A", value = 7.0, meta={'lolim': -10, 'scan': 0.1, 'lolo': -8, 'prec': 3, 'high': 5, 'hilim': 10, 'low': -5, 'hihi': 8, 'unit': 'tst'})
+pvB = coca.PV("test2:B", value = 7.0, meta={'lolim': -10, 'scan': 0.1, 'lolo': -8, 'prec': 3, 'high': 5, 'hilim': 10, 'low': -5, 'hihi': 8, 'unit': 'cats'})
 
 # tell coca we would like to broadcast these pvs
 coca.broadcast_pv(pvA)
