@@ -1,5 +1,7 @@
 #include "coca/PV.h"
 #include <iostream>
+#include <chrono>
+#include <thread>
 
 // Must update include path in root to point to coca, python and fmt, then compile and run:
 // Example:
@@ -8,7 +10,7 @@
 // gSystem->AddIncludePath("-I/Users/s7o/github/fmt");
 // .x basic.C+d
 
-void basic()
+void basic(int duration = 30)
 {
 	double x = 10.0; 
 	auto dog = coca::create_pv("dog",&x); 
@@ -17,4 +19,8 @@ void basic()
 	int z = 10; 
 	auto cat = coca::create_pv("cat",&z); 
 	coca::broadcast_pv(cat);
+
+	std::this_thread::sleep_for(std::chrono::seconds(duration));
+
+	coca::quit(0);
 }

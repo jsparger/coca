@@ -4,6 +4,8 @@ from pcaspy import cas
 import threading
 import time
 import sys
+from datetime import datetime
+from pytz import timezone
 
 # A companion to the pcaspy manager
 class CocaManager(pcaspy.driver.Manager):
@@ -35,6 +37,14 @@ def registerDriver(driver_init_func):
 pcaspy.driver.manager = cocamanager
 pcaspy.driver.registerDriver = registerDriver
 
+epics_epoch_start = datetime(1990,1,1,tzinfo=timezone('UTC'))
+def get_time():
+	seconds = (datetime.now(timezone('UTC')) - epics_epoch_start).total_seconds();
+	time = cas.epicsTimeStamp()
+	time.secPastEpoch = int(seconds)
+	time.nsec = int((seconds % 1) * 1e6)
+	return time
+
 # The basic data object
 class BaseData(object):
 	def __init__(self,name):
@@ -44,14 +54,14 @@ class BaseData(object):
 		self.alarm = pcaspy.Alarm.UDF_ALARM
 		self.udf = True
 		self.mask = 0
-		self.time  = cas.epicsTimeStamp()
+		self.time  = get_time()
 
 	def update_status(self, val):
 		if self.name not in cocamanager.proxies:
 			return
 		self.flag = True
 		self.mask = (cas.DBE_VALUE | cas.DBE_LOG)
-		self.time = cas.epicsTimeStamp()
+		self.time = get_time()
 		alarm, severity = driver._checkAlarm(self.name, val)
 		driver.setParamStatus(self.name, alarm, severity)
 

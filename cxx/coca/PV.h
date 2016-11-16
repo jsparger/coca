@@ -57,6 +57,11 @@ struct PythonUtility
 		PyObject* args = PyTuple_Pack(1,proxy);
 		PyObject* result = PyObject_CallObject(update_pv, args);
 	}
+
+	static void quit()
+	{
+		TPython::Exec("quit()");
+	}
 };
 
 struct iPV
@@ -168,6 +173,12 @@ void broadcast_pv(T& pv)
 	PythonUtility::broadcast_pv(pv.proxy);
 }
 
+template <typename T>
+void quit(T val)
+{
+	(void)val; // suppress unused variable warning
+	TPython::Exec("quit()");
+}
 
 struct dummy
 {
