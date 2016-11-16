@@ -17,5 +17,4 @@
 #pragma link C++ function coca::broadcast_pv;
 #pragma link C++ function coca::shutdown;
 #pragma link C++ class coca::dummy+;
-#pragma link C++ class coca::init+;
 #endif
