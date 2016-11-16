@@ -112,13 +112,25 @@ struct PV : public iPV
 	virtual void setUnits(std::string units) {bUnits= true; this->units = units;}
 	virtual void setScan(double scan) {this->scan = scan;}
 
+	// virtual std::string asDict()
+	// {
+	// 	std::string s = fmt::format("{{'{}': {{ ", name); //"{'" + name + std::string("': { ");
+	// 	if (bPrecision) s += fmt::format("'prec': {},",precision);
+	// 	if (bLimits) s += fmt::format("'lolo': {}, 'low': {}, 'high': {}, 'hihi': {},",limits[0],limits[1],limits[2],limits[3]);
+	// 	if (bRange) s += fmt::format("'lolim': {}, 'hilim': {},",range[0],range[1]);
+	// 	if (bUnits) s += fmt::format("'unit': '{}',",units);
+	// 	s += fmt::format("'scan': {},",scan);
+	// 	s += "}}";
+	// 	return s;
+	// }
+
 	virtual std::string asDict()
 	{
 		std::string s = fmt::format("{{'{}': {{ ", name); //"{'" + name + std::string("': { ");
-		if (bPrecision) s += fmt::format("'prec': {},",precision);
-		if (bLimits) s += fmt::format("'lolo': {}, 'low': {}, 'high': {}, 'hihi': {},",limits[0],limits[1],limits[2],limits[3]);
-		if (bRange) s += fmt::format("'lolim': {}, 'hilim': {},",range[0],range[1]);
-		if (bUnits) s += fmt::format("'unit': '{}',",units);
+		s += fmt::format("'prec': {},",precision);
+		s += fmt::format("'lolo': {}, 'low': {}, 'high': {}, 'hihi': {},",limits[0],limits[1],limits[2],limits[3]);
+		s += fmt::format("'lolim': {}, 'hilim': {},",range[0],range[1]);
+		s += fmt::format("'unit': '{}',",units);
 		s += fmt::format("'scan': {},",scan);
 		s += "}}";
 		return s;
@@ -128,8 +140,8 @@ struct PV : public iPV
 	T previous;
 	std::array<T,2> range = {T(),T()};
 	std::array<T,4> limits = {T(),T(),T(),T()};
-	std::string units;
-	int precision;
+	std::string units = "";
+	int precision = 0;
 	double scan = 1.0;
 
 	bool bRange = false; 
