@@ -212,6 +212,11 @@ struct dummy
 };
 
 
+struct init
+{
+	// do nothing
+};
+
 
 }
 
