@@ -33,16 +33,27 @@ def registerDriver(driver_init_func):
         cocamanager._driver[port] = driver_instance
     return wrap
 
+def scan(self):
+	while True:
+		driver = cocamanager.driver.get(self.info.port)
+		if driver:
+			gddValue = cas.gdd()
+			self.getValue(gddValue)
+			gddValue.setTimeStamp(get_time()) # this is the important line
+			self.updateValue(gddValue)
+		time.sleep(self.info.scan)
+
 # Monkeypatch the pcaspy module
 pcaspy.driver.manager = cocamanager
 pcaspy.driver.registerDriver = registerDriver
+pcaspy.SimplePV.scan = scan
 
 epics_epoch_start = datetime(1990,1,1,tzinfo=timezone('UTC'))
 def get_time():
 	seconds = (datetime.now(timezone('UTC')) - epics_epoch_start).total_seconds();
 	time = cas.epicsTimeStamp()
 	time.secPastEpoch = int(seconds)
-	time.nsec = int((seconds % 1) * 1e6)
+	time.nsec = int((seconds % 1) * 1e9)
 	return time
 
 # The basic data object
@@ -54,14 +65,14 @@ class BaseData(object):
 		self.alarm = pcaspy.Alarm.UDF_ALARM
 		self.udf = True
 		self.mask = 0
-		self.time  = get_time()
+		self.time  = get_time() # cas.epicsTimeStamp() 
 
 	def update_status(self, val):
 		if self.name not in cocamanager.proxies:
 			return
 		self.flag = True
 		self.mask = (cas.DBE_VALUE | cas.DBE_LOG)
-		self.time = get_time()
+		self.time = get_time() # cas.epicsTimeStamp()
 		alarm, severity = driver._checkAlarm(self.name, val)
 		driver.setParamStatus(self.name, alarm, severity)
 

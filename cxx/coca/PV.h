@@ -186,7 +186,7 @@ void broadcast_pv(T& pv)
 }
 
 template <typename T>
-void quit(T val)
+void shutdown(T val)
 {
 	(void)val; // suppress unused variable warning
 	TPython::Exec("quit()");

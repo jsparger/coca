@@ -22,5 +22,5 @@ void basic(int duration = 30)
 
 	std::this_thread::sleep_for(std::chrono::seconds(duration));
 
-	coca::quit(0);
+	coca::shutdown(0);
 }
