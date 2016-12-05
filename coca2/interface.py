@@ -26,11 +26,13 @@ class CocaMPInterface(object):
 		return self.pvs[name]
 
 	def get_pv_value(self,name):
-		return self.pvs[name].value
+		return self.pvs[name]._value
 
 	def set_pv_value(self,name,value):
-		self.pvs[name].value = value
+		self.pvs[name]._value = value
 
+	def update(self):
+		pass
 
 class CocaMPManager(BaseManager):
 	pass

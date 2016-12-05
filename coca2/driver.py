@@ -83,6 +83,9 @@ pcaspy.SimplePV.scan = scan
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
 
+# A global interface which will be set when the server is started.
+interface = None
+
 # Our driver
 class CocaDriver(pcaspy.Driver):
 	def __init__(self, old_driver=None):
@@ -100,18 +103,19 @@ class CocaDriver(pcaspy.Driver):
 		return interface.get_pv_value(reason)
 
 	def write(self, reason, value):
+		global interface
 		# set the value through the interface
+		print "interface = {}".format(interface)
+		print "reason = {}  value = {}".format(reason,value)
 		interface.set_pv_value(reason,value)
 		return True
 
-# A global interface which will be set when the server is started.
-interface = None
 
 # A global instance of the server
 server = pcaspy.SimpleServer()
 
 # A global instance of the driver
-driver = ProxyDriver()
+driver = CocaDriver()
 
 # A thread to run the server
 update_period_seconds = 0.1
@@ -133,8 +137,8 @@ def check_for_new_pvs():
 		pvs = interface.get_pv_dict()
 		for name in interface.get_new():
 			x = pvs[name]
-			pv = Data(name=x.name,meta=x.meta,value=x._value)
-			broadcast_python_pv(pv)
+			# pv = Data(name=x.name,meta=x.meta,value=x._value)
+			broadcast_python_pv(x.name,x.meta)
 		interface.clear_new()
 		time.sleep(1)
 
@@ -143,14 +147,14 @@ tnpv.daemon = True
 tnpv.start()
 
 # A method to refresh the driver when new PVs are available
-def broadcast_python_pv(pv):
+def broadcast_python_pv(name, meta):
 	with cocamanager.mutex:
 		global driver
 		del cocamanager._driver[driver.port]
-		cocamanager.proxies[pv.name] = pv
-		server.createPV(prefix="",pvdb=pv.pvdb)
+		# TODO: there is a bug here because we don't take the initial value
+		server.createPV(prefix="",pvdb={name: meta})
 		# refresh the driver
-		driver = ProxyDriver(old_driver=driver)
+		driver = CocaDriver(old_driver=driver)
 
 
 

@@ -4,7 +4,7 @@ from pv import PV
 
 def run(interface):
 	# start the coca server
-	import driverMP as driver
+	import driver
 	driver.interface = interface
 	# create a status pv
 	# pvA = driver.Data("coca:running", value=1, meta={'scan': 1})

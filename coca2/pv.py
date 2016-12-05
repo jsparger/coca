@@ -21,6 +21,7 @@ class PV(BasePV):
 
 	@property
 	def value(self):
+		self._value = interface.interface.get_pv_value(self.name)
 		return self._value
 
 	@value.setter
