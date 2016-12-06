@@ -77,7 +77,6 @@ pcaspy.driver.manager = cocamanager
 pcaspy.driver.registerDriver = registerDriver
 pcaspy.SimplePV.scan = scan
 
-
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
 # ---------------------------------------------------------------------
@@ -98,16 +97,23 @@ class CocaDriver(pcaspy.Driver):
 			data.value = old_driver.pvDB[reason].value if check else pv.info.value 
 			self.pvDB[reason] = data
 
+	def update_status(self, reason, val):
+		if reason not in cocamanager.pvs:
+			return
+		time = get_time() # replaces cas.epicsTimeStamp()
+		alarm, severity = self._checkAlarm(reason, val)
+		driver.setParamStatus(reason, alarm, severity)
+
 	def read(self, reason):
 		# read the value from the interface
-		return interface.get_pv_value(reason)
+		value = interface.get_pv_value(reason)
+		self.setParam(reason,value)
+		return self.getParam(reason)
 
 	def write(self, reason, value):
-		global interface
 		# set the value through the interface
-		print "interface = {}".format(interface)
-		print "reason = {}  value = {}".format(reason,value)
 		interface.set_pv_value(reason,value)
+		self.setParam(reason,value)
 		return True
 
 

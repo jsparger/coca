@@ -14,6 +14,3 @@ def run(interface):
 
 # start the coca process
 p = Process(target=run, args=(interface,)); p.daemon=True; p.start()
-
-pv = PV("coca:running", value=1, meta={'scan': 1})
-interface.broadcast_pv(pv)
