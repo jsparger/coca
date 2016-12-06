@@ -35,6 +35,7 @@ class PV(CocaPV):
 		self.tcname = tcname
 		self.addr = route.addr
 		self.dtype = tc_dtypes[dtype.lower()]
+		self.onUpdate = self._onUpdate
 
 	def tcwrite(self,value):
 		pyads.write_by_name(self.addr, self.tcname, value, self.dtype)
@@ -44,14 +45,15 @@ class PV(CocaPV):
 
 	@property
 	def value(self):
-		self._value = self.tcread()
-		return self._value()
+		return self.tcread()
 
 	@CocaPV.value.setter
 	def value(self,value):
-		self.tcwrite(value)
-		self._value = self.tcread()
+		self._value = value
 		interface.interface.set_event(self.name)
+
+	def _onUpdate(self,pv):
+		self.tcwrite(self._value)
 
 
 
