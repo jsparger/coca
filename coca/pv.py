@@ -53,7 +53,7 @@ class PV(BasePV):
 	@value.setter
 	def value(self, newval):
 		self._value = newval
-		interface.interface.update_pv(self)
+		interface.interface.set_pv_value(self.name, self._value)
 
 def broadcast_pv(pv):
 	interface.interface.broadcast_pv(pv)
