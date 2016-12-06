@@ -25,6 +25,9 @@ class CocaMPInterface(object):
 		self.events[pv.name] = multiprocessing.Event()
 		self.update_pv(pv)
 
+	def set_event(self,name):
+		self.events[name].set()
+
 	def clear_event(self,name):
 		self.events[name].clear()
 
@@ -38,11 +41,10 @@ class CocaMPInterface(object):
 		return self.pvs[name]
 
 	def get_pv_value(self,name):
-		return self.pvs[name]._value
+		return self.pvs[name].value
 
 	def set_pv_value(self,name,value):
-		self.pvs[name]._value = value
-		self.events[name].set()
+		self.pvs[name].value = value
 
 class CocaMPManager(BaseManager):
 	pass
