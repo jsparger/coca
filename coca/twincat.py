@@ -1,13 +1,15 @@
 import pyads
 from pv import PV as CocaPV
-
+import interface
+import threading
+import time
 
 class Route(object):
 	def __init__(self, ip, netid, port):
 		pyads.open_port()
-		self.addr = pyads.AmsAddr(str(ip),port)
+		self.addr = pyads.AmsAddr(netid,port)
 		self.ip = str(ip)
-		pyads.add_route(adr,remote_ip)
+		pyads.add_route(self.addr,self.ip)
 
 tc_dtypes = {
 	'bool'  : 	pyads.PLCTYPE_BOOL,
@@ -30,12 +32,22 @@ tc_dtypes = {
 }
 
 class PV(CocaPV):
-	def __init__(self, name, tcname, dtype, route, meta={}, value=None):
-		super(PV,self).__init__(name,meta,value)
+	def __init__(self, name, tcname, dtype, route, meta={}):
+		super(PV,self).__init__(name,meta,None)
 		self.tcname = tcname
 		self.addr = route.addr
 		self.dtype = tc_dtypes[dtype.lower()]
 		self.onUpdate = self._onUpdate
+		self._value = self.tcread()
+		self._update_period = self.meta['scan']
+
+
+	def __getstate__(self):
+		censored = super(PV,self).__getstate__()
+		censored.pop("addr",None)
+		censored.pop("dtype",None)
+		censored.pop("onUpdate",None)
+		return censored
 
 	def tcwrite(self,value):
 		pyads.write_by_name(self.addr, self.tcname, value, self.dtype)
@@ -47,13 +59,24 @@ class PV(CocaPV):
 	def value(self):
 		return self.tcread()
 
-	@CocaPV.value.setter
+	@value.setter
 	def value(self,value):
 		self._value = value
 		interface.interface.set_event(self.name)
 
 	def _onUpdate(self,pv):
 		self.tcwrite(self._value)
+
+	def _readUpdate(self):
+		while True:
+			self.value = self.tcread()
+			time.sleep(self._update_period)
+
+	def watch(self):
+		super(PV,self).watch()
+		t = threading.Thread(target=self._readUpdate)
+		t.daemon = True
+		t.start()
 
 
 

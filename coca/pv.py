@@ -31,9 +31,10 @@ class PV(BasePV):
 				if self.onUpdate:
 					self.onUpdate(self)
 				interface.interface.clear_event(self.name)
-			except:
+			except Exception, e:
 				# We will get here if the manager process exits during the wait
 				# This often happens when the program exits
+				print str(e)
 				print "PV {} has been disconected".format(self.name)
 				break
 
