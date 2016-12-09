@@ -4,6 +4,8 @@ import interface
 import time
 import threading
 import multiprocessing
+import sys
+import run
 
 # The basic data object
 class BasePV(object):
@@ -36,7 +38,7 @@ class PV(BasePV):
 				# This often happens when the program exits
 				print str(e)
 				print "PV {} has been disconected".format(self.name)
-				break
+				sys.exit(1)
 
 	def watch(self):
 		t = threading.Thread(target=self.update)
@@ -54,7 +56,7 @@ class PV(BasePV):
 	@value.setter
 	def value(self, newval):
 		self._value = newval
-		interface.interface.set_event(self.name)
+		interface.interface.set_pv_value(self.name,self._value)
 
 def broadcast_pv(pv):
 	interface.interface.broadcast_pv(pv)

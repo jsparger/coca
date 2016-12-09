@@ -1,6 +1,7 @@
 from multiprocessing import Process
 from interface import interface
 from pv import PV
+import time
 
 def run(interface):
 	# start the coca server
@@ -14,3 +15,8 @@ def run(interface):
 
 # start the coca process
 p = Process(target=run, args=(interface,)); p.daemon=True; p.start()
+
+
+def wait():
+	while True:
+		time.sleep(1)

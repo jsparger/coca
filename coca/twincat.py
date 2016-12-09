@@ -4,12 +4,15 @@ import interface
 import threading
 import time
 
+lock = threading.Lock()
+
 class Route(object):
 	def __init__(self, ip, netid, port):
-		pyads.open_port()
-		self.addr = pyads.AmsAddr(netid,port)
-		self.ip = str(ip)
-		pyads.add_route(self.addr,self.ip)
+		with lock:
+			pyads.open_port()
+			self.addr = pyads.AmsAddr(netid,port)
+			self.ip = str(ip)
+			pyads.add_route(self.addr,self.ip)
 
 tc_dtypes = {
 	'bool'  : 	pyads.PLCTYPE_BOOL,
@@ -50,19 +53,22 @@ class PV(CocaPV):
 		return censored
 
 	def tcwrite(self,value):
-		pyads.write_by_name(self.addr, self.tcname, value, self.dtype)
+		with lock:
+			pyads.write_by_name(self.addr, self.tcname, value, self.dtype)
 
 	def tcread(self):
-		return pyads.read_by_name(self.addr, self.tcname, self.dtype)
+		with lock:
+			return pyads.read_by_name(self.addr, self.tcname, self.dtype)
 
 	@property
 	def value(self):
-		return self.tcread()
+		self._value = self.tcread()
+		return self._value
 
 	@value.setter
 	def value(self,value):
 		self._value = value
-		interface.interface.set_event(self.name)
+		interface.interface.set_pv_value(self.name,self._value)
 
 	def _onUpdate(self,pv):
 		self.tcwrite(self._value)
@@ -70,6 +76,7 @@ class PV(CocaPV):
 	def _readUpdate(self):
 		while True:
 			self.value = self.tcread()
+			# print "updating value for {} to {}".format(self.name, self._value)
 			time.sleep(self._update_period)
 
 	def watch(self):
