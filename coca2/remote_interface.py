@@ -7,6 +7,7 @@ from proxy import reduce
 
 # A synchronized queue to hold new pvs.
 new_pv_queue = Queue.Queue()
+disconnected_pv_queue = Queue.Queue()
 
 # A class which allows the coca clients to talk to the IOC
 class CocaInterface(object):
@@ -44,6 +45,13 @@ class CocaInterface(object):
 			new_pv_queue.put(pv)
 		return True
 
+	def disconnect_pv(self,name):
+		if name not in self.pvs:
+			return False
+		with self.lock:
+			disconnected_pv_queue.put(name)
+			self.pvs.pop(name,None)
+
 	def get_pv(self, name):
 		if name not in self.pvs:
 			return False
@@ -55,12 +63,10 @@ class CocaInterface(object):
 	def read(self, name):
 		# with self.lock:
 		self.events[name]['read_request'].set()
-		try:
-			self.events[name]['read_complete'].wait(timeout=1.0)
-			self.events[name]['read_complete'].clear()
-		except RuntimeError as e:
-			pass
-			# self.disconnect()
+		if not self.events[name]['read_complete'].wait(timeout=1.0):
+			self.disconnect_pv(name)
+			return None
+		self.events[name]['read_complete'].clear()
 		return self.get_value(name)
 
 	def write(self, name, value):
@@ -71,13 +77,13 @@ class CocaInterface(object):
 			self.events[name]['write_complete'].wait(timeout=1.0)
 			self.events[name]['write_complete'].clear()
 		except RuntimeError as e:
-			pass
+			self.disconnect_pv(name)
+
 
 	def get_value(self, name):
 		if name not in self.pvs:
 			return None
 		return self.pvs[name].get_value()
-		
 
 	def create_pv_events(self,name):
 		actions = {'read_request','read_complete','write_request','write_complete','push_request','push_complete','disconnect_notify'}
@@ -118,6 +124,8 @@ def get_interface():
 
 Manager.register("get_interface", get_interface)
 Manager.register("get_new_pv_queue", lambda: new_pv_queue)
+Manager.register("get_disconnected_pv_queue", lambda: disconnected_pv_queue)
+
 manager = get_manager(Manager)
 interface = manager.get_interface()
 interface.launch_epics_server()

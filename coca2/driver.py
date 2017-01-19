@@ -63,6 +63,8 @@ def get_time():
 # This is sort of broken conceptually though. What are we scanning?
 def scan(self):
 	while True:
+		if self.name not in cocamanager.pvf:
+			break
 		driver = cocamanager.driver.get(self.info.port)
 		if driver:
 			gddValue = cas.gdd()
@@ -147,6 +149,19 @@ tnpv = threading.Thread(target=check_for_new_pvs)
 tnpv.daemon = True
 tnpv.start()
 
+
+def check_for_disconnected_pvs():
+	while (not remote_manager) or (not interface):
+		time.sleep(1)
+	queue = remote_manager.get_disconnected_pv_queue()
+	while True:
+		name = queue.get()
+		disconnect_pv(name)
+
+tdpv = threading.Thread(target=check_for_disconnected_pvs)
+tdpv.daemon = True
+tdpv.start()
+
 # A method to refresh the driver when new PVs are available
 def broadcast_python_pv(name, meta):
 	with cocamanager.mutex:
@@ -156,4 +171,14 @@ def broadcast_python_pv(name, meta):
 		server.createPV(prefix="",pvdb={name: meta})
 		# refresh the driver
 		driver = CocaDriver(old_driver=driver)
+
+def disconnect_pv(name):
+	with cocamanager.mutex:
+		global driver
+		del cocamanager._driver[driver.port]
+		pv = cocamanager.pvf.pop(name,None)
+		cocamanager.pvs[driver.port].pop(name,None)
+		# refresh the driver
+		driver = CocaDriver(old_driver=driver)
+		print "DISCONNECTED {}".format(name)
 
