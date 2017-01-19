@@ -83,7 +83,8 @@ pcaspy.SimplePV.scan = scan
 # ---------------------------------------------------------------------
 
 # A global interface which will be set when the server is started.
-interface = manager.get_server()
+interface = None
+remote_manager = None
 
 # Our driver
 class CocaDriver(pcaspy.Driver):
@@ -117,7 +118,6 @@ class CocaDriver(pcaspy.Driver):
 		self.setParam(reason,value)
 		return True
 
-
 # A global instance of the server
 server = pcaspy.SimpleServer()
 
@@ -127,7 +127,6 @@ driver = CocaDriver()
 # A thread to run the server
 update_period_seconds = 0.1
 def process_events():
-	"starting server"
 	while True:
 		server.process(update_period_seconds)
 
@@ -137,10 +136,9 @@ t.start()
 
 # A thread to check for new PVs
 def check_for_new_pvs():
-	while not interface:
-		time.sleep(0.1)
-
-	queue = interface.get_new_pv_queue()
+	while (not remote_manager) or (not interface):
+		time.sleep(1)
+	queue = remote_manager.get_new_pv_queue()
 	while True:
 		pv = queue.get()
 		broadcast_python_pv(pv.name,pv.meta)

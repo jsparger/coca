@@ -1,11 +1,12 @@
 import threading
-from .server import manager
+import sys
+from remote_interface import manager,interface
 
 class PV(object):
 	def __init__(self, name, meta={}, value=None, onRead=None, onWrite=None):
 		self.lock = threading.Lock()
 		self.name = name
-		self._value = meta.get("value",value)
+		self.value = meta.get("value",value)
 		self.meta = meta
 		self.onRead = onRead
 		self.onWrite = onWrite
@@ -20,7 +21,7 @@ class PV(object):
 		self.push_request 		= ns.push_request 		= manager.StableEvent()
 		self.push_complete 		= ns.push_complete 		= manager.StableEvent()
 		
-		self.remote = m.RemotePV()
+		self.remote = manager.RemotePV()
 		self.remote.setup(self.name,self.meta,ns)
 
 	def _run(self):
@@ -50,7 +51,7 @@ class PV(object):
 		while True:
 			try:
 				self.write_request.wait()
-				self.value = remote.get_value()
+				self.value = self.remote.get_value()
 				with self.lock:
 					if self.onWrite:
 						self.onWrite(self)
@@ -66,7 +67,9 @@ class PV(object):
 	def push(self,value):
 		pass
 
-
+def broadcast_pv(pv):
+	pv._run()
+	interface.broadcast_pv(pv.remote)
 
 
 
