@@ -4,7 +4,7 @@ from proxy import StableEventProxy, StableLockProxy
 import threading
 import socket
 
-coca_address = ('localhost',5050)
+coca_address = ('localhost',5052)
 
 def get_manager(klass):
 	manager = klass(coca_address)

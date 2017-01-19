@@ -11,18 +11,8 @@ class PV(object):
 		self.onRead = onRead
 		self.onWrite = onWrite
 
-		ns = manager.Namespace()
-		self.lock 				= ns.lock 				= manager.StableLock()
-		self.disconnect_notify 	= ns.disconnect_notify 	= manager.StableEvent()
-		self.read_request 		= ns.read_request 		= manager.StableEvent()
-		self.read_complete 		= ns.read_complete 		= manager.StableEvent()
-		self.write_request 		= ns.write_request 		= manager.StableEvent()
-		self.write_complete 	= ns.write_complete 	= manager.StableEvent()
-		self.push_request 		= ns.push_request 		= manager.StableEvent()
-		self.push_complete 		= ns.push_complete 		= manager.StableEvent()
-		
 		self.remote = manager.RemotePV()
-		self.remote.setup(self.name,self.meta,ns)
+		self.remote.setup(self.name,self.meta)
 
 	def _run(self):
 		# launch read thread
@@ -33,13 +23,13 @@ class PV(object):
 	def _read(self):
 		while True:
 			try:
-				self.read_request.wait()
+				interface.wait_event(self.name,'read_request')
 				with self.lock:
 					if self.onRead:
 						self.onRead(self)
 					self.remote.set_value(self.value)
-					self.read_request.clear()
-					self.read_complete.set()
+					interface.clear_event(self.name,'read_request')
+					interface.set_event(self.name, 'read_complete')
 			except Exception as e:
 				# We will get here if the manager process exits during the wait
 				# This often happens when the program exits
@@ -50,13 +40,13 @@ class PV(object):
 	def _write(self):
 		while True:
 			try:
-				self.write_request.wait()
+				interface.wait_event(self.name, 'write_request')
 				self.value = self.remote.get_value()
 				with self.lock:
 					if self.onWrite:
 						self.onWrite(self)
-					self.write_request.clear()
-					self.write_complete.set()
+					interface.clear_event(self.name, 'write_request')
+					interface.set_event(self.name, 'write_complete')
 			except Exception as e:
 				# We will get here if the manager process exits during the wait
 				# This often happens when the program exits
@@ -68,6 +58,7 @@ class PV(object):
 		pass
 
 def broadcast_pv(pv):
+	interface.create_pv_events(pv.name)
 	pv._run()
 	interface.broadcast_pv(pv.remote)
 

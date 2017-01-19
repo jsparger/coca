@@ -12,19 +12,24 @@ new_pv_queue = Queue.Queue()
 class CocaInterface(object):
 	def __init__(self):
 		self.pvs = {}
+		self.events = {}
 		self.lock = threading.Lock()
 		# self.launch_epics_server()
 
 	def launch_epics_server(self):
-		m = get_manager(Manager)
-		p = Process(target=run, args=(m.get_interface(),m)); p.daemon=True; p.start()
+		self.manager = get_manager(Manager)
+		self.interface = self.manager.get_interface()
+		p = Process(target=run, args=(self.interface,self.manager)); p.daemon=True; p.start()
 		self.epics_process = p
 
 	def __getstate__(self):
 		censored = dict(self.__dict__)
 		censored.pop("lock",None)
+		censored.pop("interface",None)
 		censored.pop("manager",None)
 		censored.pop("epics_process",None)
+		censored.pop("events",None)
+		censored.pop("pvs",None)
 		return censored
 
 	def broadcast_pv(self, pv):
@@ -44,16 +49,47 @@ class CocaInterface(object):
 		return self.pvs
 
 	def read(self, name):
-		# danger
-		return self.pvs[name].read()
+		# with self.lock:
+		self.events[name]['read_request'].set()
+		try:
+			self.events[name]['read_complete'].wait(timeout=1.0)
+			self.events[name]['read_complete'].clear()
+		except RuntimeError as e:
+			pass
+			# self.disconnect()
+		return self.get_value(name)
 
 	def write(self, name, value):
-		# danger
-		self.pvs[name].write(value)
+		# with self.lock:
+		self.pvs[name].value = value
+		self.events[name]['write_request'].set()
+		try:
+			self.events[name]['write_complete'].wait(timeout=1.0)
+			self.events[name]['write_complete'].clear()
+		except RuntimeError as e:
+			pass
+
+	def get_value(self, name):
+		return self.pvs[name].value
+
+	def create_pv_events(self,name):
+		events = {}
+		actions = {'read_request','read_complete','write_request','write_complete','push_request','push_complete','disconnect_notify'}
+		self.events[name] = {key:threading.Event() for key in actions}
+
+	def set_event(self, name, action):
+		self.events[name][action].set()
+
+	def wait_event(self, name, action, timeout=None):
+		self.events[name][action].wait(timeout)
+
+	def clear_event(self, name, action):
+		self.events[name][action].clear()
+
 
 interface = None
 
-Manager.register("Interface", CocaInterface)
+# Manager.register("Interface", CocaInterface)
 
 def get_interface():
 	global interface
