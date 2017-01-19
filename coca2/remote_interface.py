@@ -74,21 +74,35 @@ class CocaInterface(object):
 			pass
 
 	def get_value(self, name):
+		if name not in self.pvs:
+			return None
 		return self.pvs[name].get_value()
+		
 
 	def create_pv_events(self,name):
-		events = {}
 		actions = {'read_request','read_complete','write_request','write_complete','push_request','push_complete','disconnect_notify'}
 		self.events[name] = {key:threading.Event() for key in actions}
 
 	def set_event(self, name, action):
-		self.events[name][action].set()
+		try:
+			self.events[name][action].set()
+			return True
+		except:
+			return False
 
 	def wait_event(self, name, action, timeout=None):
-		self.events[name][action].wait(timeout)
+		try:
+			self.events[name][action].wait(timeout)
+			return True
+		except:
+			return False
 
 	def clear_event(self, name, action):
-		self.events[name][action].clear()
+		try:
+			self.events[name][action].clear()
+			return True
+		except:
+			return False
 
 
 interface = None
