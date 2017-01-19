@@ -1,4 +1,5 @@
 import multiprocessing
+import multiprocessing.managers
 from multiprocessing import current_process
 from multiprocessing.forking import Popen
 
@@ -52,7 +53,7 @@ class StableNamespaceProxy(multiprocessing.managers.NamespaceProxy):
 	        return (RebuildProxy,
 	                (type(self), self._token, self._serializer, kwds))
 
-class StableLock(multiprocessing.managers.AcquirerProxy):
+class StableLockProxy(multiprocessing.managers.AcquirerProxy):
 	def __reduce__(self):
 	    kwds = {}
 	    if Popen.thread_is_spawning():
