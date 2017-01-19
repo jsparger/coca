@@ -14,9 +14,12 @@ class CocaInterface(object):
 		self.pvs = {}
 		self.events = {}
 		self.lock = threading.Lock()
+		self.epics_process = None
 		# self.launch_epics_server()
 
 	def launch_epics_server(self):
+		if self.epics_process and self.epics_process.is_alive:
+			return
 		self.manager = get_manager(Manager)
 		self.interface = self.manager.get_interface()
 		p = Process(target=run, args=(self.interface,self.manager)); p.daemon=True; p.start()
@@ -33,10 +36,11 @@ class CocaInterface(object):
 		return censored
 
 	def broadcast_pv(self, pv):
-		if pv.name in self.pvs:
+		name = pv.get_name()
+		if name in self.pvs:
 			return False
 		with self.lock:
-			self.pvs[pv.name] = pv
+			self.pvs[name] = pv
 			new_pv_queue.put(pv)
 		return True
 
@@ -61,7 +65,7 @@ class CocaInterface(object):
 
 	def write(self, name, value):
 		# with self.lock:
-		self.pvs[name].value = value
+		self.pvs[name].set_value(value)
 		self.events[name]['write_request'].set()
 		try:
 			self.events[name]['write_complete'].wait(timeout=1.0)
@@ -70,7 +74,7 @@ class CocaInterface(object):
 			pass
 
 	def get_value(self, name):
-		return self.pvs[name].value
+		return self.pvs[name].get_value()
 
 	def create_pv_events(self,name):
 		events = {}

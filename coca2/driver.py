@@ -141,7 +141,7 @@ def check_for_new_pvs():
 	queue = remote_manager.get_new_pv_queue()
 	while True:
 		pv = queue.get()
-		broadcast_python_pv(pv.name,pv.meta)
+		broadcast_python_pv(pv.get_name(),pv.get_meta())
 
 tnpv = threading.Thread(target=check_for_new_pvs)
 tnpv.daemon = True

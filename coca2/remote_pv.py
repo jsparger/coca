@@ -21,3 +21,9 @@ class RemotePV(object):
 	def get_value(self):
 		return self.value
 
+	def get_name(self):
+		return self.name
+
+	def get_meta(self):
+		return self.meta
+
