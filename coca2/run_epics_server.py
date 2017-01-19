@@ -11,10 +11,10 @@ def info(title):
 
 def run(interface,manager):
 	# set up logging
-	procname = 'cocadriver'
+	# procname = 'cocadriver'
 	# sys.stdout = open(procname + ".out", "w", buffering=0)
 	# sys.stderr = open(procname + ".err", "w", buffering=0)
-	info(procname)
+	# info(procname)
 
 	# start the coca server
 	import driver

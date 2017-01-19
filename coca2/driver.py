@@ -62,9 +62,15 @@ def get_time():
 # when using multiprocessing.
 # This is sort of broken conceptually though. What are we scanning?
 def scan(self):
+
+	# prevent the scan loop from starting until the cocamanager is done configuring.
+	with cocamanager.mutex:
+		pass
+
 	while True:
 		if self.name not in cocamanager.pvf:
 			break
+
 		driver = cocamanager.driver.get(self.info.port)
 		if driver:
 			gddValue = cas.gdd()
