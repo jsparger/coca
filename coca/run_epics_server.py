@@ -10,12 +10,6 @@ def info(title):
     print 'process id:', os.getpid()
 
 def run(interface,manager):
-	# set up logging
-	# procname = 'cocadriver'
-	# sys.stdout = open(procname + ".out", "w", buffering=0)
-	# sys.stderr = open(procname + ".err", "w", buffering=0)
-	# info(procname)
-
 	# start the coca server
 	import driver
 	driver.interface = interface

@@ -1,2 +1,0 @@
-interface = None
-manager = None
