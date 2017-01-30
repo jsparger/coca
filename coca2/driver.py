@@ -67,17 +67,17 @@ def scan(self):
 	with cocamanager.mutex:
 		pass
 
-	while True:
-		if self.name not in cocamanager.pvf:
-			break
-
-		driver = cocamanager.driver.get(self.info.port)
-		if driver:
-			gddValue = cas.gdd()
-			self.getValue(gddValue)
-			gddValue.setTimeStamp(get_time()) # this is the important line
-			self.updateValue(gddValue)
-		time.sleep(self.info.scan)
+	try:
+		while True:
+			driver = cocamanager.driver.get(self.info.port)
+			if driver:
+				gddValue = cas.gdd()
+				self.getValue(gddValue)
+				gddValue.setTimeStamp(get_time()) # this is the important line
+				self.updateValue(gddValue)
+			time.sleep(self.info.scan)
+	except KeyError:
+		print "PV {} has disconnected...halting scan.".format(self.name)
 
 
 # Monkeypatch the pcaspy module
@@ -182,9 +182,7 @@ def disconnect_pv(name):
 	with cocamanager.mutex:
 		global driver
 		del cocamanager._driver[driver.port]
-		pv = cocamanager.pvf.pop(name,None)
+		cocamanager.pvf.pop(name,None)
 		cocamanager.pvs[driver.port].pop(name,None)
 		# refresh the driver
 		driver = CocaDriver(old_driver=driver)
-		print "DISCONNECTED {}".format(name)
-
