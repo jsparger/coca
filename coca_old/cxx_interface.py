@@ -10,7 +10,7 @@ def broadcast_cxx_pv(pv):
 	cxx_pvs[pv.name] = pv
 	dict_string = pv.asDict();
 	meta = ast.literal_eval(dict_string)[pv.name]
-	coca_pv = PV(name=pv.name, meta=meta, value=pv.getValue())
+	coca_pv = PV(name=pv.name, meta=meta, value=pv.getValue(), onread=pv.onread, onwrite=pv.onwrite)
 	coca_pvs[pv.name] = coca_pv
 	interface.broadcast_pv(coca_pv)
 

@@ -106,6 +106,16 @@ struct PV : public iPV
 		*value = newval;
 	}
 
+	virtual void onRead(PyObject* pv)
+	{
+		std::cout << "cxx onRead \n";
+	}
+
+	virtual void onWrite(PyObject* pv)
+	{
+		std::cout << "cxx onWrite \n";
+	}
+
 	virtual void setRange(std::array<T,2> range) {bRange = true; this->range = range;}
 	virtual void setLimits(std::array<T,4> limits) {bLimits = true; this->limits = limits;}
 	virtual void setPrecision(int precision) {bPrecision = true; this->precision = precision;}

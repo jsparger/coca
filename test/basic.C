@@ -2,6 +2,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include "Python.h"
 
 // Must update include path in root to point to coca, python and fmt, then compile and run:
 // Example:
@@ -20,7 +21,9 @@ void basic(int duration = 30)
 	auto cat = coca::create_pv("cat",&z); 
 	coca::broadcast_pv(cat);
 
+	Py_BEGIN_ALLOW_THREADS
 	std::this_thread::sleep_for(std::chrono::seconds(duration));
+	Py_END_ALLOW_THREADS
 
 	coca::shutdown(0);
 }

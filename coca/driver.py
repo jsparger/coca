@@ -76,7 +76,8 @@ def scan(self):
 				gddValue.setTimeStamp(get_time()) # this is the important line
 				self.updateValue(gddValue)
 			time.sleep(self.info.scan)
-	except KeyError:
+	except KeyError as e:
+		print "pvf = {}".format(cocamanager.pvf.items())
 		print "PV {} has disconnected...halting scan.".format(self.name)
 
 
@@ -149,7 +150,9 @@ def check_for_new_pvs():
 	queue = remote_manager.get_new_pv_queue()
 	while True:
 		pv = queue.get()
+		print "new pv = {}".format(pv.get_name())
 		broadcast_python_pv(pv.get_name(),pv.get_meta())
+		print "pvf = {}".format(cocamanager.pvf.items())
 
 tnpv = threading.Thread(target=check_for_new_pvs)
 tnpv.daemon = True
@@ -162,6 +165,7 @@ def check_for_disconnected_pvs():
 	queue = remote_manager.get_disconnected_pv_queue()
 	while True:
 		name = queue.get()
+		print "diconnecting pv = {}".format(name)
 		disconnect_pv(name)
 
 tdpv = threading.Thread(target=check_for_disconnected_pvs)
