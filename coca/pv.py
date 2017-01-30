@@ -1,63 +1,71 @@
-import pcaspy
-from pcaspy import cas
-import interface
-import time
 import threading
-import multiprocessing
 import sys
-import run
+from remote_interface import manager,interface
 
-# The basic data object
-class BasePV(object):
-	def __init__(self,name):
+class PV(object):
+	def __init__(self, name, meta={}, value=None, onRead=None, onWrite=None):
+		self.lock = threading.Lock()
 		self.name = name
-
-# This is the python data object
-class PV(BasePV):
-	def __init__(self, name, meta={}, value=None, onUpdate=None):
-		super(PV,self).__init__(name)
-		self._value = meta.get("value",value)
+		self.value = meta.get("value",value)
 		self.meta = meta
-		self.onUpdate = onUpdate
+		self.onRead = onRead
+		self.onWrite = onWrite
 
-	def __getstate__(self):
-		censored = dict(self.__dict__)
-		censored.pop("onUpdate",None)
-		return censored
+		self.remote = manager.RemotePV()
+		self.remote.setup(self.name,self.meta)
 
-	def update(self):
+	def _run(self):
+		# launch read thread
+		t = threading.Thread(target=self._read); t.daemon = True; t.start()
+		# launch write thread
+		t = threading.Thread(target=self._write); t.daemon = True; t.start()
+
+	def _read(self):
 		while True:
 			try:
-				interface.interface.wait_event(self.name)
-				self._value = interface.interface.get_pv_value(self.name)
-				if self.onUpdate:
-					self.onUpdate(self)
-				interface.interface.clear_event(self.name)
-			except Exception, e:
+				interface.wait_event(self.name,'read_request')
+				with self.lock:
+					if self.onRead:
+						self.onRead(self)
+					self.remote.set_value(self.value)
+					interface.clear_event(self.name,'read_request')
+					interface.set_event(self.name, 'read_complete')
+			except Exception as e:
 				# We will get here if the manager process exits during the wait
 				# This often happens when the program exits
 				print str(e)
 				print "PV {} has been disconected".format(self.name)
 				sys.exit(1)
 
-	def watch(self):
-		t = threading.Thread(target=self.update)
-		t.daemon = True
-		t.start()		
+	def _write(self):
+		while True:
+			try:
+				interface.wait_event(self.name, 'write_request')
+				self.value = self.remote.get_value()
+				with self.lock:
+					if self.onWrite:
+						self.onWrite(self)
+					interface.clear_event(self.name, 'write_request')
+					interface.set_event(self.name, 'write_complete')
+			except Exception as e:
+				# We will get here if the manager process exits during the wait
+				# This often happens when the program exits
+				print str(e)
+				print "PV {} has been disconected".format(self.name)
+				sys.exit(1)
 
-	@property
-	def pvdb(self):
-		return {self.name : self.meta}
-
-	@property
-	def value(self):
-		return self._value
-
-	@value.setter
-	def value(self, newval):
-		self._value = newval
-		interface.interface.set_pv_value(self.name,self._value)
+	def push(self,value):
+		pass
 
 def broadcast_pv(pv):
-	interface.interface.broadcast_pv(pv)
-	pv.watch()
+	interface.create_pv_events(pv.name)
+	pv._run()
+	interface.broadcast_pv(pv.remote)
+
+
+
+
+
+
+
+

@@ -62,14 +62,22 @@ def get_time():
 # when using multiprocessing.
 # This is sort of broken conceptually though. What are we scanning?
 def scan(self):
-	while True:
-		driver = cocamanager.driver.get(self.info.port)
-		if driver:
-			gddValue = cas.gdd()
-			self.getValue(gddValue)
-			gddValue.setTimeStamp(get_time()) # this is the important line
-			self.updateValue(gddValue)
-		time.sleep(self.info.scan)
+
+	# prevent the scan loop from starting until the cocamanager is done configuring.
+	with cocamanager.mutex:
+		pass
+
+	try:
+		while True:
+			driver = cocamanager.driver.get(self.info.port)
+			if driver:
+				gddValue = cas.gdd()
+				self.getValue(gddValue)
+				gddValue.setTimeStamp(get_time()) # this is the important line
+				self.updateValue(gddValue)
+			time.sleep(self.info.scan)
+	except KeyError:
+		print "PV {} has disconnected...halting scan.".format(self.name)
 
 
 # Monkeypatch the pcaspy module
@@ -84,6 +92,7 @@ pcaspy.SimplePV.scan = scan
 
 # A global interface which will be set when the server is started.
 interface = None
+remote_manager = None
 
 # Our driver
 class CocaDriver(pcaspy.Driver):
@@ -106,16 +115,16 @@ class CocaDriver(pcaspy.Driver):
 
 	def read(self, reason):
 		# read the value from the interface
-		value = interface.get_pv_value(reason)
+		value = interface.read(reason)
 		self.setParam(reason,value)
 		return self.getParam(reason)
 
 	def write(self, reason, value):
 		# set the value through the interface
-		interface.set_pv_value(reason,value)
+		interface.write(reason,value)
+		value = interface.read(reason)
 		self.setParam(reason,value)
 		return True
-
 
 # A global instance of the server
 server = pcaspy.SimpleServer()
@@ -126,7 +135,6 @@ driver = CocaDriver()
 # A thread to run the server
 update_period_seconds = 0.1
 def process_events():
-	"starting server"
 	while True:
 		server.process(update_period_seconds)
 
@@ -134,23 +142,31 @@ t = threading.Thread(target=process_events)
 t.daemon = True
 t.start()
 
-
 # A thread to check for new PVs
 def check_for_new_pvs():
-	while not interface:
-		time.sleep(0.1)
-	while True:
-		pvs = interface.get_pv_dict()
-		for name in interface.get_new():
-			x = pvs[name]
-			# pv = Data(name=x.name,meta=x.meta,value=x._value)
-			broadcast_python_pv(x.name,x.meta)
-		interface.clear_new()
+	while (not remote_manager) or (not interface):
 		time.sleep(1)
+	queue = remote_manager.get_new_pv_queue()
+	while True:
+		pv = queue.get()
+		broadcast_python_pv(pv.get_name(),pv.get_meta())
 
 tnpv = threading.Thread(target=check_for_new_pvs)
 tnpv.daemon = True
 tnpv.start()
+
+
+def check_for_disconnected_pvs():
+	while (not remote_manager) or (not interface):
+		time.sleep(1)
+	queue = remote_manager.get_disconnected_pv_queue()
+	while True:
+		name = queue.get()
+		disconnect_pv(name)
+
+tdpv = threading.Thread(target=check_for_disconnected_pvs)
+tdpv.daemon = True
+tdpv.start()
 
 # A method to refresh the driver when new PVs are available
 def broadcast_python_pv(name, meta):
@@ -162,12 +178,11 @@ def broadcast_python_pv(name, meta):
 		# refresh the driver
 		driver = CocaDriver(old_driver=driver)
 
-
-
-
-
-
-
-
-
-
+def disconnect_pv(name):
+	with cocamanager.mutex:
+		global driver
+		del cocamanager._driver[driver.port]
+		cocamanager.pvf.pop(name,None)
+		cocamanager.pvs[driver.port].pop(name,None)
+		# refresh the driver
+		driver = CocaDriver(old_driver=driver)
