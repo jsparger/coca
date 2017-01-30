@@ -25,13 +25,11 @@ class PV(object):
 			try:
 				interface.wait_event(self.name,'read_request')
 				with self.lock:
-					print "self.value = {}".format(self.value)
 					if self.onRead:
 						self.onRead(self)
 					self.remote.set_value(self.value)
 					interface.clear_event(self.name,'read_request')
 					interface.set_event(self.name, 'read_complete')
-					print "read complete"
 			except Exception as e:
 				# We will get here if the manager process exits during the wait
 				# This often happens when the program exits

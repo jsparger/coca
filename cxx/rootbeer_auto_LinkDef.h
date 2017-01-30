@@ -8,6 +8,8 @@
 #pragma link C++ nestedclass;
 #pragma link C++ nestedtypedef;
 #pragma link C++ namespace coca;
+#pragma link C++ class coca::GIL+;
+#pragma link C++ class coca::PyLock+;
 #pragma link C++ class coca::Demangler+;
 #pragma link C++ function coca::get_python_proxy;
 #pragma link C++ class coca::PythonUtility+;

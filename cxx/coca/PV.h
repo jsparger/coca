@@ -17,6 +17,45 @@
 
 namespace coca {
 
+struct GIL
+{
+	GIL()
+		: threadState(PyEval_SaveThread())
+	{
+		// do nothing else
+	}
+
+	void acquire()
+	{
+		PyEval_RestoreThread(threadState);
+		gState = PyGILState_Ensure();
+	}
+
+	void release()
+	{
+		PyGILState_Release(gState);
+		threadState = PyEval_SaveThread();
+	}
+
+	PyThreadState* threadState;
+	PyGILState_STATE gState;
+};
+
+static GIL* gil = nullptr;
+
+struct PyLock
+{
+	PyLock()
+	{
+		gil->acquire();
+	}
+
+	~PyLock()
+	{
+		gil->release();
+	}
+};
+
 struct Demangler
 {
 	static std::string demangle(const char* name)
@@ -36,14 +75,23 @@ struct Demangler
 template <typename T>
 PyObject* get_python_proxy(T& pv)
 {
+
+	if (!gil)
+	{
+		TPython::Exec("import sys");
+		gil = new GIL();
+	} 
+	PyLock lock;
 	std::string klassName = Demangler::demangle(typeid(pv).name());
-	return TPython::ObjectProxy_FromVoidPtr((void*)&pv, klassName.c_str());
+	auto object = TPython::ObjectProxy_FromVoidPtr((void*)&pv, klassName.c_str());
+	return object;
 }
 
 struct PythonUtility
 {
 	static void broadcast_pv(PyObject* proxy)
 	{
+		PyLock lock;
 		PyObject* coca = PyImport_Import(PyString_FromString((char*)"coca"));
 		PyObject* broadcast_pv = PyObject_GetAttrString(coca,(char*)"broadcast_cxx_pv");
 		PyObject* args = PyTuple_Pack(1,proxy);
@@ -52,6 +100,7 @@ struct PythonUtility
 
 	static void update_pv(PyObject* proxy)
 	{
+		PyLock lock;
 		PyObject* coca = PyImport_Import(PyString_FromString((char*)"coca"));
 		PyObject* update_pv = PyObject_GetAttrString(coca,(char*)"update_cxx_pv");
 		PyObject* args = PyTuple_Pack(1,proxy);
@@ -60,6 +109,7 @@ struct PythonUtility
 
 	static void quit()
 	{
+		PyLock lock;
 		TPython::Exec("quit()");
 	}
 };
@@ -122,18 +172,6 @@ struct PV : public iPV
 	virtual void setUnits(std::string units) {bUnits= true; this->units = units;}
 	virtual void setScan(double scan) {this->scan = scan;}
 
-	// virtual std::string asDict()
-	// {
-	// 	std::string s = fmt::format("{{'{}': {{ ", name); //"{'" + name + std::string("': { ");
-	// 	if (bPrecision) s += fmt::format("'prec': {},",precision);
-	// 	if (bLimits) s += fmt::format("'lolo': {}, 'low': {}, 'high': {}, 'hihi': {},",limits[0],limits[1],limits[2],limits[3]);
-	// 	if (bRange) s += fmt::format("'lolim': {}, 'hilim': {},",range[0],range[1]);
-	// 	if (bUnits) s += fmt::format("'unit': '{}',",units);
-	// 	s += fmt::format("'scan': {},",scan);
-	// 	s += "}}";
-	// 	return s;
-	// }
-
 	virtual std::string asDict()
 	{
 		std::string s = fmt::format("{{'{}': {{ ", name); //"{'" + name + std::string("': { ");
@@ -169,26 +207,6 @@ PV<T> create_pv(std::string name, T* value)
 	return PV<T>(name,value);
 }
 
-// template <typename T>
-// void broadcast_pv_safe(T& pv)
-// {
-// 	const std::type_info& info = typeid(pv);
-// 	auto dict = TClassTable::GetDict(info);
-// 	if (!dict)
-// 	{
-// 		throw std::runtime_error(
-// 			fmt::format("Error in coca::broadcast_pv<T>() : No dictionary exists for type {}. "
-// 				"Try adding '#pragma link C++ class coca::PV<double>+;' your LinkDef.h", info.name())
-// 			);
-// 	}
-// 	TClass* klass = dict();
-// 	auto proxy = TPython::ObjectProxy_FromVoidPtr((void*)&pv, klass->GetName());
-// 	PyObject* coca = PyImport_Import(PyString_FromString((char*)"coca"));
-// 	PyObject* broadcast_pv = PyObject_GetAttrString(coca,(char*)"broadcast_pv");
-// 	PyObject* args = PyTuple_Pack(1,proxy);
-// 	PyObject* result = PyObject_CallObject(broadcast_pv, args);
-// }
-
 template <typename T>
 void broadcast_pv(T& pv)
 {
@@ -199,6 +217,7 @@ template <typename T>
 void shutdown(T val)
 {
 	(void)val; // suppress unused variable warning
+	PyLock lock;
 	TPython::Exec("quit()");
 }
 
