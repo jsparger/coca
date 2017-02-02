@@ -29,8 +29,8 @@ def snmp_read(pv):
 			output = subprocess.check_output(command.split())
 			pv.value = pv.dtype(output)
 		except subprocess.CalledProcessError, e:
-    		print output
-    		raise e
+			print output
+			raise e
 
 def snmp_write(pv):
 	r = pv.route
@@ -40,8 +40,8 @@ def snmp_write(pv):
 		try:
 			output = subprocess.check_output(command.split())
 		except subprocess.CalledProcessError, e:
-    		print output
-    		raise e
+			print output
+			raise e
 
 class PV(CocaPV):
 	def __init__(self, name, route, format, snmpname, meta={}):
