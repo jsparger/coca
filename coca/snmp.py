@@ -5,7 +5,7 @@ import subprocess
 lock = threading.Lock()
 
 class Route(object):
-	def __init__(ip, version, mib, community):
+	def __init__(self, ip, version, mib, community):
 		self.ip = ip
 		self.version = version
 		self.mib = mib
