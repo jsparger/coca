@@ -11,6 +11,7 @@
 #include <typeinfo>
 #include <cxxabi.h>
 #include <iostream>
+#include <functional>
 
 #define FMT_HEADER_ONLY
 #include "fmt/format.h"
@@ -127,11 +128,12 @@ struct iPV
 template <typename T>
 struct PV : public iPV
 {
-	PV(std::string name, T* value)
-		: iPV(name), value(value), previous(*value) 
+	PV(std::string name, T* value, std::function<void(PV<T>*)> onRead=nullptr, std::function<void(PV<T>*)> onWrite=nullptr)
+		: iPV(name), value(value), previous(*value), onReadTarget(onRead), onWriteTarget(onWrite)
 		{
 			this->proxy = get_python_proxy(*this);
 		}
+
 	virtual ~PV() {;}
 
 	virtual bool isUpdated() override
@@ -158,12 +160,18 @@ struct PV : public iPV
 
 	virtual void onRead(PyObject* pv)
 	{
-		std::cout << "cxx onRead \n";
+		if (onReadTarget)
+		{
+			onReadTarget(this);
+		}
 	}
 
 	virtual void onWrite(PyObject* pv)
 	{
-		std::cout << "cxx onWrite \n";
+		if (onWriteTarget)
+		{
+			onWriteTarget(this);
+		}
 	}
 
 	virtual void setRange(std::array<T,2> range) {bRange = true; this->range = range;}
@@ -199,12 +207,14 @@ struct PV : public iPV
 	bool bScan = true;
 
 	PyObject* proxy = nullptr;
+
+	std::function<void(PV<T>*)> onReadTarget, onWriteTarget;
 };
 
-template <typename T>
-PV<T> create_pv(std::string name, T* value)
+template <typename T, typename F=std::function<void(PV<T>*)>, typename G=std::function<void(PV<T>*)>>
+PV<T> create_pv(std::string name, T* value, F onRead = nullptr, G onWrite = nullptr)
 {
-	return PV<T>(name,value);
+	return PV<T>(name,value,onRead,onWrite);
 }
 
 template <typename T>

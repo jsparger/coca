@@ -18,7 +18,9 @@ void basic(int duration = 30)
 	coca::broadcast_pv(dog);
 
 	int z = 10; 
-	auto cat = coca::create_pv("cat",&z); 
+	auto onRead = [](auto pv){std::cout << "now reading " << pv->name << "\n";};
+	auto onWrite = [](auto pv){std::cout << "now writing " << pv->name << "\n";};
+	auto cat = coca::create_pv("cat",&z,onRead,onWrite); 
 	coca::broadcast_pv(cat);
 
 	std::this_thread::sleep_for(std::chrono::seconds(duration));
