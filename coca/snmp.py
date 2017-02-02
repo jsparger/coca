@@ -49,5 +49,5 @@ class PV(CocaPV):
 		self.snmpname = snmpname
 		self.format = format
 		self.dtype = snmp_dtypes[format]
-		value = snmp_read(pv)
+		value = snmp_read(self)
 		super(PV,self).__init__(name,meta,value,onRead=tcread,onWrite=tcwrite)
