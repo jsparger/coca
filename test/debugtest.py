@@ -5,8 +5,10 @@ import random
 import threading
 import Queue
 import functools
+from coca.jobs import QLock
 
-lock = threading.Lock()
+# lock = threading.Lock()
+qlock = QLock()
 
 # Meta data for the temperature variables (e.g. TE1)
 meta = {
@@ -21,35 +23,41 @@ meta = {
 	'lolo' : 0.1,
 }
 
-class QueuePV(CocaPV):
-	def __init__(self, name, meta={}, value=None, onRead=None, onWrite=None):
-		super(QueuePV,self).__init__(name,meta,value,onRead=onRead,onWrite=onWrite)
-		self.read_event = threading.Event()
-
-queue = Queue.Queue()
-
-def slowRead(pv):
+def qLockRead(pv):
+	with qlock:
 		time.sleep(0.05)
 		pv.value = random.random()
+		print "{} updated".format(pv.name)
 
-def slowReadQueue(pv):
-	queue.put(pv)
-	pv.read_event.wait()
-	pv.read_event.clear()
-	# print "{} updated".format(pv.name)
+# class QueuePV(CocaPV):
+# 	def __init__(self, name, meta={}, value=None, onRead=None, onWrite=None):
+# 		super(QueuePV,self).__init__(name,meta,value,onRead=onRead,onWrite=onWrite)
+# 		self.read_event = threading.Event()
 
-def slowReadThread():
-	while True:
-		pv = queue.get()
-		slowRead(pv)
-		pv.read_event.set()
+# queue = Queue.Queue()
 
-t = threading.Thread(target=slowReadThread)
-t.daemon = True
-t.start()
+# def slowRead(pv):
+# 		time.sleep(0.05)
+# 		pv.value = random.random()
+
+# def slowReadQueue(pv):
+# 	queue.put(pv)
+# 	pv.read_event.wait()
+# 	pv.read_event.clear()
+# 	# print "{} updated".format(pv.name)
+
+# def slowReadThread():
+# 	while True:
+# 		pv = queue.get()
+# 		slowRead(pv)
+# 		pv.read_event.set()
+
+# t = threading.Thread(target=slowReadThread)
+# t.daemon = True
+# t.start()
 
 print "creating pvs"
-pvs = [QueuePV(name="debug:{}".format(i),meta=meta,onRead=slowReadQueue) for i in range(1)]
+pvs = [coca.PV(name="debug:{}".format(i),meta=meta,onRead=qLockRead) for i in range(1)]
 
 for pv in pvs:
 	print "broacasting pv {}".format(pv.name)
