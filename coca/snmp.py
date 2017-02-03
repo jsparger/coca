@@ -22,7 +22,7 @@ snmp_dtypes = {
 
 def snmp_read(pv):
 	r = pv.route
-	template = "snmpget -Oqv -v {v} -m {mib} -c {c} {ip} {name}"
+	template = "snmpget -OUqv -v {v} -m {mib} -c {c} {ip} {name}"
 	command = template.format(v=r.version, mib=r.mib, c=r.community, ip=r.ip, name=pv.snmpname)
 	with lock:
 		try:
@@ -50,4 +50,4 @@ class PV(CocaPV):
 		self.format = format
 		self.dtype = snmp_dtypes[format]
 		value = snmp_read(self)
-		super(PV,self).__init__(name,meta,value,onRead=tcread,onWrite=tcwrite)
+		super(PV,self).__init__(name,meta,value,onRead=snmp_read,onWrite=snmp_write)

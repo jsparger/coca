@@ -35,7 +35,8 @@ tc_dtypes = {
 
 def tcread(pv):
 	with lock:
-		pv.value = pyads.read_by_name(pv.addr, pv.tcname, pv.dtype)
+		value = pyads.read_by_name(pv.addr, pv.tcname, pv.dtype)
+		pv.value = value
 
 def tcwrite(pv):
 	with lock:
@@ -43,8 +44,9 @@ def tcwrite(pv):
 
 class PV(CocaPV):
 	def __init__(self, name, tcname, dtype, route, meta={}):
+		self.name = name
 		self.tcname = tcname
 		self.addr = route.addr
 		self.dtype = tc_dtypes[dtype.lower()]
-		value = tcread(self)
-		super(PV,self).__init__(name,meta,value,onRead=tcread,onWrite=tcwrite)
+		tcread(self)
+		super(PV,self).__init__(name,meta,self.value,onRead=tcread,onWrite=tcwrite)

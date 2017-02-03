@@ -63,7 +63,7 @@ class CocaInterface(object):
 	def read(self, name):
 		# with self.lock:
 		self.events[name]['read_request'].set()
-		if not self.events[name]['read_complete'].wait(timeout=1.0):
+		if not self.events[name]['read_complete'].wait(timeout=2.0):
 			self.disconnect_pv(name)
 			return None
 		self.events[name]['read_complete'].clear()
@@ -74,7 +74,7 @@ class CocaInterface(object):
 		self.pvs[name].set_value(value)
 		self.events[name]['write_request'].set()
 		try:
-			self.events[name]['write_complete'].wait(timeout=1.0)
+			self.events[name]['write_complete'].wait(timeout=2.0)
 			self.events[name]['write_complete'].clear()
 		except RuntimeError as e:
 			self.disconnect_pv(name)
