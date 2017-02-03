@@ -77,7 +77,7 @@ def scan(self):
 				self.updateValue(gddValue)
 			time.sleep(self.info.scan)
 	except KeyError as e:
-		print "pvf = {}".format(cocamanager.pvf.items())
+		# print "pvf = {}".format(cocamanager.pvf.items())
 		print "PV {} has disconnected...halting scan.".format(self.name)
 
 
@@ -116,6 +116,7 @@ class CocaDriver(pcaspy.Driver):
 
 	def read(self, reason):
 		# read the value from the interface
+		print "getting ready to read pv {}".format(reason)
 		value = interface.read(reason)
 		self.setParam(reason,value)
 		return self.getParam(reason)
@@ -152,7 +153,6 @@ def check_for_new_pvs():
 		pv = queue.get()
 		print "new pv = {}".format(pv.get_name())
 		broadcast_python_pv(pv.get_name(),pv.get_meta())
-		print "pvf = {}".format(cocamanager.pvf.items())
 
 tnpv = threading.Thread(target=check_for_new_pvs)
 tnpv.daemon = True

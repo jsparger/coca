@@ -1,6 +1,7 @@
 import threading
 import sys
 from remote_interface import manager,interface
+import socket
 
 class PV(object):
 	def __init__(self, name, meta={}, value=None, onRead=None, onWrite=None):
@@ -30,11 +31,11 @@ class PV(object):
 					self.remote.set_value(self.value)
 					interface.clear_event(self.name,'read_request')
 					interface.set_event(self.name, 'read_complete')
-			except Exception as e:
+			except socket.error as e:
 				# We will get here if the manager process exits during the wait
 				# This often happens when the program exits
 				print str(e)
-				print "PV {} has been disconected".format(self.name)
+				print "PV {} has been disconnected".format(self.name)
 				sys.exit(1)
 
 	def _write(self):
@@ -47,7 +48,7 @@ class PV(object):
 						self.onWrite(self)
 					interface.clear_event(self.name, 'write_request')
 					interface.set_event(self.name, 'write_complete')
-			except Exception as e:
+			except socket.error as e:
 				# We will get here if the manager process exits during the wait
 				# This often happens when the program exits
 				print str(e)
