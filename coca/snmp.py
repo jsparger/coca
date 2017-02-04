@@ -1,8 +1,8 @@
 from pv import PV as CocaPV
-import threading
+from coca.jobs import QLock
 import subprocess
 
-lock = threading.Lock()
+lock = QLock()
 
 class Route(object):
 	def __init__(self, ip, version, mib, community):

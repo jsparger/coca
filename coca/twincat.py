@@ -1,9 +1,8 @@
 import pyads
 from pv import PV as CocaPV
-import threading
-import time
+from coca.jobs import QLock
 
-lock = threading.Lock()
+lock = QLock()
 
 class Route(object):
 	def __init__(self, ip, netid, port):
