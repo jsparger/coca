@@ -5,6 +5,7 @@ from jobs import Jobs
 from manager import Manager, get_manager
 from run_epics_server import run
 from proxy import reduce
+from datetime import datetime
 
 # A synchronized queue to hold new pvs.
 new_pv_queue = Queue.Queue()
@@ -76,12 +77,13 @@ class CocaInterface(object):
 		return self.pvs
 
 	def read(self, name):
-		# print "trying to read " + name
 		with self.jobs.task():
 			with self.locks[name]:
-				# print "reading..." + name
 				self.events[name]['read_request'].set()
-				if not self.events[name]['read_complete'].wait(timeout=2.0):
+				# start = datetime.now()
+				result = self.events[name]['read_complete'].wait(timeout=60.0)
+				# print "{} : {} end wait at {}".format(result,name,datetime.now()-start)
+				if not result:
 					self.disconnect_pv(name)
 					return None
 				self.events[name]['read_complete'].clear()
@@ -89,13 +91,12 @@ class CocaInterface(object):
 
 	def write(self, name, value):
 		with self.jobs.task():
-			self.pvs[name].set_value(value)
-			self.events[name]['write_request'].set()
-			try:
-				self.events[name]['write_complete'].wait(timeout=2.0)
+			with self.locks[name]:
+				self.pvs[name].set_value(value)
+				self.events[name]['write_request'].set()
+				if not self.events[name]['write_complete'].wait(timeout=60.0):
+					self.disconnect_pv(name)
 				self.events[name]['write_complete'].clear()
-			except RuntimeError as e:
-				self.disconnect_pv(name)
 
 	def get_value(self, name):
 		if name not in self.pvs:

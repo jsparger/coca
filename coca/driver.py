@@ -116,7 +116,6 @@ class CocaDriver(pcaspy.Driver):
 
 	def read(self, reason):
 		# read the value from the interface
-		print "getting ready to read pv {}".format(reason)
 		value = interface.read(reason)
 		self.setParam(reason,value)
 		return self.getParam(reason)

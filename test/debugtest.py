@@ -12,7 +12,7 @@ qlock = QLock()
 
 # Meta data for the temperature variables (e.g. TE1)
 meta = {
-	'scan' : 0.1,
+	'scan' : 1,
 	'prec' : 3,
 	'unit' : 'K',
 	'lolim': 0,
@@ -25,44 +25,22 @@ meta = {
 
 def qLockRead(pv):
 	with qlock:
-		time.sleep(0.05)
-		pv.value = random.random()
-		print "{} updated".format(pv.name)
+		# time.sleep(0.5)
+		pv.value = pv.value + 0.1*(random.random() - 0.5)
+		# print "{} updated".format(pv.name)
 
-# class QueuePV(CocaPV):
-# 	def __init__(self, name, meta={}, value=None, onRead=None, onWrite=None):
-# 		super(QueuePV,self).__init__(name,meta,value,onRead=onRead,onWrite=onWrite)
-# 		self.read_event = threading.Event()
+def qLockWrite(pv):
+	with qlock:
+		print "{} = {}".format(pv.name, pv.value)
 
-# queue = Queue.Queue()
-
-# def slowRead(pv):
-# 		time.sleep(0.05)
-# 		pv.value = random.random()
-
-# def slowReadQueue(pv):
-# 	queue.put(pv)
-# 	pv.read_event.wait()
-# 	pv.read_event.clear()
-# 	# print "{} updated".format(pv.name)
-
-# def slowReadThread():
-# 	while True:
-# 		pv = queue.get()
-# 		slowRead(pv)
-# 		pv.read_event.set()
-
-# t = threading.Thread(target=slowReadThread)
-# t.daemon = True
-# t.start()
 
 print "creating pvs"
-pvs = [coca.PV(name="debug:{}".format(i),meta=meta,onRead=qLockRead) for i in range(1)]
+pvs = [coca.PV(name="debug:{}".format(i),meta=meta,value=0.0,onRead=qLockRead,onWrite=qLockWrite) for i in range(100)]
 
 for pv in pvs:
 	print "broacasting pv {}".format(pv.name)
 	coca.broadcast_pv(pv)
 	time.sleep(0.1)
 
-time.sleep(10)
+coca.wait()
 

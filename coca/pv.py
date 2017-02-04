@@ -26,15 +26,19 @@ class PV(object):
 			try:
 				interface.wait_event(self.name,'read_request')
 				with self.lock:
+					# print self.name + " got read request"
 					if self.onRead:
 						self.onRead(self)
 					self.remote.set_value(self.value)
+					# print self.name + " set the value"
 					interface.clear_event(self.name,'read_request')
+					# print self.name + " cleared the read request"
 					interface.set_event(self.name, 'read_complete')
+					# print self.name + " sent read complete"
 			except socket.error as e:
 				# We will get here if the manager process exits during the wait
 				# This often happens when the program exits
-				print str(e)
+				print e
 				print "PV {} has been disconnected".format(self.name)
 				sys.exit(1)
 
