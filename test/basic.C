@@ -13,13 +13,22 @@
 
 void basic(int duration = 30)
 {
+	auto onRead = [](auto pv)
+	{
+		std::cout << "now reading " << pv->name << " whose value is " << *(pv->value) << "\n";
+	};
+
+	auto onWrite = [](auto pv)
+	{
+		std::cout << "now writing value of " << *(pv->value) << " to " << pv->name << "\n";
+	};
+
 	double x = 10.0; 
-	auto dog = coca::create_pv("dog",&x); 
+	auto dog = coca::create_pv("dog",&x,onRead,onWrite); 
 	coca::broadcast_pv(dog);
 
 	int z = 10; 
-	auto onRead = [](auto pv){std::cout << "now reading " << pv->name << "\n";};
-	auto onWrite = [](auto pv){std::cout << "now writing " << pv->name << "\n";};
+	
 	auto cat = coca::create_pv("cat",&z,onRead,onWrite); 
 	coca::broadcast_pv(cat);
 
