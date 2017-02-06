@@ -1,7 +1,9 @@
 import threading
 import sys
+import os
 from remote_interface import manager,interface
 import socket
+import multiprocessing
 
 class PV(object):
 	def __init__(self, name, meta={}, value=None, onRead=None, onWrite=None):
@@ -35,7 +37,7 @@ class PV(object):
 					# print self.name + " cleared the read request"
 					interface.set_event(self.name, 'read_complete')
 					# print self.name + " sent read complete"
-			except socket.error as e:
+			except (socket.error, EOFError, IOError) as e:
 				# We will get here if the manager process exits during the wait
 				# This often happens when the program exits
 				print e
