@@ -9,6 +9,11 @@ def broadcast_cxx_pv(pv):
 	cxx_pvs[pv.name] = pv
 	dict_string = pv.asDict();
 	meta = ast.literal_eval(dict_string)[pv.name]
+	x = pv.getValue()
+	print type(pv.getValue())
+	print type(x)
+	x = 777
+	print type(x)
 	coca_pv = PV(name=pv.name, meta=meta, onRead=pv.onRead, onWrite=pv.onWrite, value=pv.getValue())
 	coca_pvs[pv.name] = coca_pv
 	broadcast_pv(coca_pv)

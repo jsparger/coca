@@ -148,9 +148,9 @@ struct PV : public iPV
 		PythonUtility::update_pv(this->proxy);
 	}
 
-	virtual const T& getValue()
+	virtual const T* getValue()
 	{
-		return *value;
+		return value;
 	}
 
 	virtual void setValue(T newval)
