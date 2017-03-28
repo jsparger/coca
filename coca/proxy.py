@@ -27,7 +27,6 @@ class StableEventProxy(multiprocessing.managers.EventProxy):
 	def __reduce__(self):
 	    return reduce(self)
 
-
 class StableConditionProxy(multiprocessing.managers.ConditionProxy):
 	def __reduce__(self):
 	    return reduce(self)
