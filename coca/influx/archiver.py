@@ -6,14 +6,17 @@ from coca.proxy import reduce
 from coca.jobs import QLock
 import epics
 import influxdb
+import os
 
 class Archiver(object):
 	def __init__(self):
 		self.lock = QLock()
 		self.pvs = {}
-		self.db_name = "coca_archive"
-		self.influx_client = influxdb.InfluxDBClient('localhost', 8086, '', '', self.db_name)
-		self.influx_client.create_database(self.db_name)
+		db_name = os.environ.get('COCA_INFLUX_DB_NAME', "coca_archive")
+		host = os.environ.get('COCA_INFLUX_HOST', '')
+		port = os.environ.get('COCA_INFLUX_PORT', 8086)
+		self.influx_client = influxdb.InfluxDBClient(host, port, '', '', db_name)
+		self.influx_client.create_database(db_name)
 
 	def archive(self,name):
 		with self.lock:

@@ -1,5 +1,5 @@
 import coca
-# import coca.influx.manager
+import coca.influx
 import random
 
 # start coca
@@ -37,9 +37,9 @@ coca.broadcast_pv(pvA)
 coca.broadcast_pv(pvB)
 
 # archive the PVs in influxdb
-# influx = coca.influx.manager.interface.get_archiver()
-# influx.archive(pvA.name)
-# influx.archive(pvB.name)
+influx = coca.influx.manager.interface.get_archiver()
+influx.archive(pvA.name)
+influx.archive(pvB.name)
 
 # let the server run indefinitely
 coca.wait()

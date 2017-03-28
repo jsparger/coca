@@ -32,7 +32,11 @@ Manager.register("Archiver", Archiver, ArchiverProxy)
 # http://stackoverflow.com/questions/28318502/pythonusing-multiprocessing-manager-in-process-pool
 # http://bugs.python.org/issue7503
 multiprocessing.current_process().authkey = 'xxxxx'
-influx_archiver_address = ('localhost',5053)
+
+# for future reference, if host='', we will accept connections on any interface. 
+# host='localhost' will only accept connections from local machine
+# see http://stackoverflow.com/questions/14550467/socket-server-in-python
+influx_archiver_address = ('',5053)
 
 def get_manager(klass):
 	_manager = klass(influx_archiver_address)
