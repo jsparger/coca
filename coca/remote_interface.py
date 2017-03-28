@@ -131,6 +131,7 @@ class CocaInterface(object):
 			return False
 
 
+manager = None
 interface = None
 
 # Manager.register("Interface", CocaInterface)
@@ -146,6 +147,12 @@ Manager.register("get_interface", get_interface)
 Manager.register("get_new_pv_queue", lambda: new_pv_queue)
 Manager.register("get_disconnected_pv_queue", lambda: disconnected_pv_queue)
 
-manager = get_manager(Manager)
-interface = manager.get_interface()
-interface.launch_epics_server()
+def init():
+	global manager
+	global interface
+	if manager is None:
+		manager = get_manager(Manager)
+	if interface is None:
+		interface = manager.get_interface()
+		interface.launch_epics_server()
+

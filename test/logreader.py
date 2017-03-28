@@ -2,6 +2,9 @@ import coca
 import random
 import time
 
+# start coca
+coca.init()
+
 # create the log file (overwrite any existing)
 file = "./test.log"
 with open(file,'w') as logfile:

@@ -1,6 +1,9 @@
 import coca
+# import coca.influx.manager
 import random
-import manager
+
+# start coca
+coca.init()
 
 # a function to perform random walk betweein -10 and 10.
 def walk(val):
@@ -34,9 +37,9 @@ coca.broadcast_pv(pvA)
 coca.broadcast_pv(pvB)
 
 # archive the PVs in influxdb
-influx = manager.interface.get_archiver()
-influx.archive(pvA.name)
-influx.archive(pvB.name)
+# influx = coca.influx.manager.interface.get_archiver()
+# influx.archive(pvA.name)
+# influx.archive(pvB.name)
 
 # let the server run indefinitely
 coca.wait()

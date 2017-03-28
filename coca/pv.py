@@ -1,7 +1,7 @@
 import threading
 import sys
 import os
-from remote_interface import manager,interface
+import remote_interface as ri
 import socket
 import multiprocessing
 
@@ -14,7 +14,7 @@ class PV(object):
 		self.onRead = onRead
 		self.onWrite = onWrite
 
-		self.remote = manager.RemotePV()
+		self.remote = ri.manager.RemotePV()
 		self.remote.setup(self.name,self.meta)
 
 	def _run(self):
@@ -26,16 +26,16 @@ class PV(object):
 	def _read(self):
 		while True:
 			try:
-				interface.wait_event(self.name,'read_request')
+				ri.interface.wait_event(self.name,'read_request')
 				with self.lock:
 					# print self.name + " got read request"
 					if self.onRead:
 						self.onRead(self)
 					self.remote.set_value(self.value)
 					# print self.name + " set the value"
-					interface.clear_event(self.name,'read_request')
+					ri.interface.clear_event(self.name,'read_request')
 					# print self.name + " cleared the read request"
-					interface.set_event(self.name, 'read_complete')
+					ri.interface.set_event(self.name, 'read_complete')
 					# print self.name + " sent read complete"
 			except (socket.error, EOFError, IOError) as e:
 				# We will get here if the manager process exits during the wait
@@ -47,13 +47,13 @@ class PV(object):
 	def _write(self):
 		while True:
 			try:
-				interface.wait_event(self.name, 'write_request')
+				ri.interface.wait_event(self.name, 'write_request')
 				self.value = self.remote.get_value()
 				with self.lock:
 					if self.onWrite:
 						self.onWrite(self)
-					interface.clear_event(self.name, 'write_request')
-					interface.set_event(self.name, 'write_complete')
+					ri.interface.clear_event(self.name, 'write_request')
+					ri.interface.set_event(self.name, 'write_complete')
 			except socket.error as e:
 				# We will get here if the manager process exits during the wait
 				# This often happens when the program exits
@@ -65,9 +65,9 @@ class PV(object):
 		pass
 
 def broadcast_pv(pv):
-	interface.create_pv_events(pv.name)
+	ri.interface.create_pv_events(pv.name)
 	pv._run()
-	interface.broadcast_pv(pv.remote)
+	ri.interface.broadcast_pv(pv.remote)
 
 
 

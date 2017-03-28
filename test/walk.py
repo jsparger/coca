@@ -2,6 +2,8 @@ import coca
 import random
 import time
 
+# start coca
+coca.init()
 
 # A function to perform random walk betweein -10 and 10.
 def walk(val):
