@@ -22,12 +22,15 @@ class CocaInterface(object):
 		self.overall_lock = threading.Lock()
 		self.epics_process = None
 		self.jobs = Jobs()
+		self.epics_process = None
 		# self.launch_epics_server()
 
 	def launch_epics_server(self):
 		if self.epics_process and self.epics_process.is_alive:
 			return
 		self.manager = get_manager(Manager)
+		# self.manager = Manager(('',5052)); 
+		# self.manager.connect()
 		self.interface = self.manager.get_interface()
 		p = Process(target=run, args=(self.interface,self.manager)); p.daemon=True; p.start()
 		self.epics_process = p

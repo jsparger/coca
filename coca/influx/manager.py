@@ -36,7 +36,7 @@ multiprocessing.current_process().authkey = 'xxxxx'
 # for future reference, if host='', we will accept connections on any interface. 
 # host='localhost' will only accept connections from local machine
 # see http://stackoverflow.com/questions/14550467/socket-server-in-python
-influx_archiver_address = ('',5053)
+influx_archiver_address = ('0.0.0.0',5053)
 
 def get_manager(klass):
 	_manager = klass(influx_archiver_address)
@@ -47,10 +47,10 @@ def get_manager(klass):
 		s.close()
 	except socket.error as e:
 		# server not running, so start
-		print "starting"
+		print "starting coca influx archiver "
 		_manager.start()
 	else:
-		print "connecting"
+		print "connecting to coca influx archiver"
 		# server already running, so just connect
 		_manager.connect()
 
