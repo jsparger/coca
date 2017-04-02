@@ -2,6 +2,7 @@ import multiprocessing
 from multiprocessing.managers import SyncManager
 from archiver import Archiver, ArchiverProxy
 import socket
+import os
 
 class Manager(SyncManager):
 	pass

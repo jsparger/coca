@@ -6,6 +6,7 @@ import threading
 import socket
 import multiprocessing
 from multiprocessing.managers import SyncManager
+import os
 
 # there is a "bug" that requires this to be set to the same value for every process using the manager.
 # http://stackoverflow.com/questions/28318502/pythonusing-multiprocessing-manager-in-process-pool
