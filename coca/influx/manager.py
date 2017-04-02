@@ -18,6 +18,9 @@ class ArchiverInterface(object):
 	def status(self):
 		return "ArchiverInterface: self.archiver = {}".format(self.archiver)
 
+	def set_address(self,address):
+		self.archiver._token.address = address
+
 
 interface = None
 
