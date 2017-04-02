@@ -13,8 +13,8 @@ class Archiver(object):
 		self.lock = QLock()
 		self.pvs = {}
 		db_name = os.environ.get('COCA_INFLUX_DB_NAME', "coca_archive")
-		host = os.environ.get('COCA_INFLUX_HOST', '')
-		port = os.environ.get('COCA_INFLUX_PORT', 8086)
+		host = os.environ.get('COCA_INFLUX_DB_HOST', '')
+		port = os.environ.get('COCA_INFLUX_DB_PORT', 8086)
 		self.influx_client = influxdb.InfluxDBClient(host, port, '', '', db_name)
 		self.influx_client.create_database(db_name)
 

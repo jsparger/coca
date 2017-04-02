@@ -36,7 +36,8 @@ multiprocessing.current_process().authkey = 'xxxxx'
 # for future reference, if host='', we will accept connections on any interface. 
 # host='localhost' will only accept connections from local machine
 # see http://stackoverflow.com/questions/14550467/socket-server-in-python
-influx_archiver_address = ('0.0.0.0',5053)
+influx_archive_host = os.environ.get('COCA_INFLUX_ARCHIVER_HOST', '0.0.0.0')
+influx_archiver_address = (influx_archive_host,5053)
 
 def get_manager(klass):
 	_manager = klass(influx_archiver_address)

@@ -11,7 +11,8 @@ from multiprocessing.managers import SyncManager
 # http://stackoverflow.com/questions/28318502/pythonusing-multiprocessing-manager-in-process-pool
 # http://bugs.python.org/issue7503
 multiprocessing.current_process().authkey = 'xxxxx'
-coca_address = ('0.0.0.0',5052)
+coca_host = os.environ.get('COCA_HOST', '0.0.0.0')
+coca_address = (coca_host,5052)
 
 def get_manager(klass):
 	manager = klass(coca_address)
