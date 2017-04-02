@@ -49,10 +49,10 @@ def get_manager(klass):
 		s.close()
 	except socket.error as e:
 		# server not running, so start
-		print "starting coca influx archiver "
+		print "starting coca influx archiver at {}".format(influx_archiver_address)
 		_manager.start()
 	else:
-		print "connecting to coca influx archiver"
+		print "connecting to coca influx archiver at {}".format(influx_archiver_address)
 		# server already running, so just connect
 		_manager.connect()
 

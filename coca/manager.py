@@ -23,11 +23,11 @@ def get_manager(klass):
 		s.close()
 	except socket.error as e:
 		# server not running, so start
-		print "starting coca manager"
+		print "starting coca manager at {}".format(coca_address)
 		manager.start()
 	else:
 		# server already running, so just connect
-		print "connecting to coca manager"
+		print "connecting to coca manager at {}".format(coca_address)
 		manager.connect()
 	return manager
 
