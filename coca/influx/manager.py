@@ -15,6 +15,9 @@ class ArchiverInterface(object):
 	def get_archiver(self):
 		return self.archiver
 
+	def status(self):
+		return "ArchiverInterface: self.archiver = {}".format(self.archiver)
+
 
 interface = None
 

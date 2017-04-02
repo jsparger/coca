@@ -1,6 +1,7 @@
 import coca
 import coca.influx
 import random
+import multiprocessing
 
 # start coca
 coca.init()
