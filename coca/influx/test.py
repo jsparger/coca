@@ -15,6 +15,7 @@ def walk(val):
 # a function that will be called every time the PV is read
 def my_read_callback(pv):
     # update the pv value using random walk
+    print "my_read_callback({})".format(pv.name)
     pv.value = walk(pv.value)
 
 # meta data for the PVs
@@ -42,8 +43,8 @@ coca.broadcast_pv(pvB)
 # archive the PVs in influxdb
 # import coca.influx
 # coca.influx.manager.interface.set_address(coca.influx.manager.interface._token.address) # hack ugh.
-print "HelloWorld waiting 10 seconds"
-time.sleep(10) # give coca the time to start broadcasting
+print "HelloWorld waiting 1 seconds"
+time.sleep(1) # give coca the time to start broadcasting
 
 print "HelloWorld calling influx.archive"
 influx = coca.influx.manager.interface.get_archiver()
