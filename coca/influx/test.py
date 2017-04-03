@@ -34,16 +34,22 @@ pvA = coca.PV("HelloWorld:A", value=0.0, meta=metadata, onRead=my_read_callback)
 pvB = coca.PV("HelloWorld:B", value=7.0, meta=metadata, onRead=my_read_callback)
 
 # tell coca we would like to broadcast these pvs
+print "HelloWorld calling coca.broadcast"
 coca.broadcast_pv(pvA)
 coca.broadcast_pv(pvB)
 
 # archive the PVs in influxdb
 # import coca.influx
 # coca.influx.manager.interface.set_address(coca.influx.manager.interface._token.address) # hack ugh.
+print "HelloWorld waiting 10 seconds"
 time.sleep(10) # give coca the time to start broadcasting
+
+print "HelloWorld calling influx.archive"
 influx = coca.influx.manager.interface.get_archiver()
 influx.archive(pvA.name)
 influx.archive(pvB.name)
 
+
 # let the server run indefinitely
+print "HelloWorld running indefinitely"
 coca.wait()
