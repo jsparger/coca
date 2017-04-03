@@ -46,6 +46,7 @@ class Archiver(object):
 		]
 
 		self.influx_client.write_points(json_body,time_precision='ms')
+		print "finished: coca.influx.Archiver.influx_write({}, {})".format(pvname, value)
 
 
 class ArchiverProxy(BaseProxy):
