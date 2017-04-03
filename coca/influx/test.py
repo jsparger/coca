@@ -2,6 +2,7 @@ import coca
 import coca.influx
 import random
 import multiprocessing
+import time
 
 # start coca
 coca.init()
