@@ -38,7 +38,8 @@ coca.broadcast_pv(pvA)
 coca.broadcast_pv(pvB)
 
 # archive the PVs in influxdb
-coca.influx.manager.interface.set_address(coca.influx.manager.interface._token.address)
+# import coca.influx
+# coca.influx.manager.interface.set_address(coca.influx.manager.interface._token.address) # hack ugh.
 influx = coca.influx.manager.interface.get_archiver()
 influx.archive(pvA.name)
 influx.archive(pvB.name)
