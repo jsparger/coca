@@ -48,6 +48,7 @@ class CocaInterface(object):
 		return censored
 
 	def broadcast_pv(self, pv):
+		print "coca.CocaInterface.broadcast_pv({})".format(pv.get_name())
 		name = pv.get_name()
 		if name in self.pvs:
 			return False

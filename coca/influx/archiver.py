@@ -19,6 +19,7 @@ class Archiver(object):
 		self.influx_client.create_database(db_name)
 
 	def archive(self,name):
+		print "coca.influx.Archiver: archive({})".format(name)
 		with self.lock:
 			self.pvs[name] = epics.PV(name,callback=self.influx_write)
 
@@ -29,6 +30,8 @@ class Archiver(object):
 			pv.disconnect()
 
 	def influx_write(self, pvname=None, value=None, timestamp=None, **kws):
+		print "coca.influx.Archiver.influx_write({}, {})".format(pvname, value)
+
 		if not (pvname and value and timestamp):
 			return
 		
