@@ -54,4 +54,4 @@ influx.archive(pvB.name)
 
 # let the server run indefinitely
 print "HelloWorld running indefinitely"
-coca.wait()
+# coca.wait()
